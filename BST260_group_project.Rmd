@@ -14,45 +14,47 @@ library(olsrr)
 library(ggplot2)
 library(VGAM)
 library(nnet)
+library(DescTools)
+library(ResourceSelection)
+library(LogisticDx)
+library(knitr)
+library(mice)
+library(caret)
+library(leaps)
+library(MASS)
 ```
 
 ## Forest Fire
 ```{r}
+# Add season category 
 fire <- read.csv("forestfires.csv", header=TRUE, sep = ",")
 fire$season <- rep("spring", 517)
 for (i in 1:517){
 if (fire$month[i] %in% c("feb","jan","dec")) fire$season[i] <- "winter"
-if (fire$month[i] %in% c("oct","nov","sep")) fire$season[i] <- "autoumn"
+if (fire$month[i] %in% c("oct","nov","sep")) fire$season[i] <- "autumn"
 if (fire$month[i] %in% c("aug","jul","jun")) fire$season[i] <- "summer"
 }
 fire$season <- as.factor(fire$season)
+
+fire$season.cat <- rep(0, 517)
+for (i in 1:517){
+  if (fire$season[i] == "summer") {
+    fire$season.cat[i] <- 1
+  }
+  if (fire$season[i] == "autumn") {
+    fire$season.cat[i] <- 2
+  }
+  if (fire$season[i] =="winter") {
+    fire$season.cat[i] <- 3
+  }
+}
 fire
 ```
 
-### Attribute Information:
-1. Spatial information
-* X - x-axis spatial coordinate within the Montesinho park map: 1 to 9
-* Y - y-axis spatial coordinate within the Montesinho park map: 2 to 9
-
-2. Temporal information
-* month - month of the year: 'jan' to 'dec'
-* day - day of the week: 'mon' to 'sun'
-
-3. FWI: The forest Fire Weather Index (FWI). Which is the Canadian system for rating fire danger.
-* FFMC - FFMC index from the FWI system: 18.7 to 96.20
-* DMC - DMC index from the FWI system: 1.1 to 291.3
-* DC - DC index from the FWI system: 7.9 to 860.6
-* ISI - ISI index from the FWI system: 0.0 to 56.10
-
-4. Methorological information
-* temp - temperature in Celsius degrees: 2.2 to 33.30
-* RH - relative humidity in %: 15.0 to 100
-* wind - wind speed in km/h: 0.40 to 9.40
-* rain - outside rain in mm/m2 : 0.0 to 6.4
-* area - the burned area of the forest (in ha): 0.00 to 1090.84
 
 
 ```{r}
+# Area log transformation (for area>0)
 hist(fire$area,40, main = "Histogram of area", xlab = "Area")
 fire["logarea"] <- ifelse(fire$area >0, log(fire$area), NA)
 ggplot(data=fire, aes(x=logarea))+
@@ -66,16 +68,17 @@ ggplot(data=fire, aes(x=logarea))+
 
 
 
-### Analysis
-#### Linear Regression
+#### Linear Regression Analysis
 ```{r}
-area_posit <- fire[which(area>0),]
+# Fit linear regression model to area>0 since this is normally distributed
+area_posit <- fire[which(fire$area>0),]
 summary(area_posit)
-
 area_posit
 
-mod_lin <- lm(logarea ~ ., data=area_posit[c(seq(1,12),14,15)])
-summary(mod_lin)
+mod_lin <- lm(logarea ~X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain+as.factor(season.cat), data=area_posit[c(seq(1,12),15,16)])
+summary(mod_lin)  # DMC and DC are being statistically significant 
+
+# Outliers
 ols_plot_cooksd_chart(mod_lin)  #number 262 datapoint in this data set, which is id=500
 ols_plot_resid_lev(mod_lin)
 
@@ -91,21 +94,54 @@ text(x=1:length(cooksd)+1, y=cooksd+0.001, labels=ifelse(cooksd>4*mean(cooksd, n
 ```
 
 ```{r}
-influential = which(cooksd>4*mean(cooksd, na.rm=T))
-area_posit[influential, ]
-dat <- area_posit[-influential,]
+# Get rid off the outliers
+influential = which(cooksd>4*mean(cooksd, na.rm=T))  # influential points
+area_posit[influential, ]   #all data for influential points
+dat <- area_posit[-influential,]  #get rid off the influential points
 dat
+
+#Fit linear regression again, now without the influential points and outliers
+mod_lin2 <- lm(logarea ~ ., data=dat[c(seq(1,12),15,16)])
+summary(mod_lin2)
+
+plot(mod_lin2, which=c(1,2,3))
+
+# Linear model with backward selection
+full.model <- lm(logarea ~., data = dat[c(seq(1,12),15,16)])
+step.model <- stepAIC(full.model, direction = "backward", trace = FALSE)
+summary(step.model)
+
+table1<- matrix(c(summary(mod_lin)$r.squared, summary(mod_lin)$adj.r.squared, sqrt(mean(mod_lin$residuals^2)),AIC(mod_lin), BIC(mod_lin),
+                  summary(mod_lin2)$r.squared, summary(mod_lin2)$adj.r.squared, sqrt(mean(mod_lin2$residuals^2)),AIC(mod_lin2), BIC(mod_lin2),
+                  summary(step.model)$r.squared, summary(step.model)$adj.r.squared, sqrt(mean(step.model$residuals^2)),AIC(step.model), BIC(step.model)), ncol=5,nrow=3, byrow=TRUE)
+colnames(table1)<- c("R^2", "Adjusted R^2", "Square root of MSE","AIC", "BIC")
+rownames(table1)<- c("logarea ~.",
+                     "logarea~., (w/o influential points)",
+                     "model with backward selection based on AIC values")
+table1 <- as.table(table1)
+kable(table1)
 ```
 
-### After dealing with outliers
+
+
+### New complete dataset
 ```{r}
-new_dat <- rbind(fire[which(fire$area==0),], dat)
-new_dat$burn <- ifelse(new_dat$area==0,0,1)
+new_dat <- rbind(fire[which(fire$area==0),], dat)   #join the area_positive w/o influential points to the data w/ area=0
+new_dat$burn <- ifelse(new_dat$area==0,0,1)  #to get the new dataset without the influential points
 new_dat
+md.pattern(new_dat)
 ```
 
+### Logistic Regression
+```{r}
+# Fit Logistic Regression
+lg_burn <- glm(burn ~ X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain, family=binomial(),data=new_dat)
+summary(lg_burn)
 
+hoslem.test(new_dat$burn, fitted(lg_burn), g=10)  #not a poor fit (H0: small P-value, poor fit)
 
+gof(lg_burn)  #AUC=64.0%
+```
 
 
 
