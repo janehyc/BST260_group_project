@@ -7,6 +7,115 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dplyr)
+library(broom)
+library(olsrr)
+library(ggplot2)
+library(VGAM)
+library(nnet)
 ```
 
-# Forest Fire
+## Forest Fire
+```{r}
+fire <- read.csv("forestfires.csv", header=TRUE, sep = ",")
+fire$season <- rep("spring", 517)
+for (i in 1:517){
+if (fire$month[i] %in% c("feb","jan","dec")) fire$season[i] <- "winter"
+if (fire$month[i] %in% c("oct","nov","sep")) fire$season[i] <- "autoumn"
+if (fire$month[i] %in% c("aug","jul","jun")) fire$season[i] <- "summer"
+}
+fire$season <- as.factor(fire$season)
+fire
+```
+
+### Attribute Information:
+1. Spatial information
+* X - x-axis spatial coordinate within the Montesinho park map: 1 to 9
+* Y - y-axis spatial coordinate within the Montesinho park map: 2 to 9
+
+2. Temporal information
+* month - month of the year: 'jan' to 'dec'
+* day - day of the week: 'mon' to 'sun'
+
+3. FWI: The forest Fire Weather Index (FWI). Which is the Canadian system for rating fire danger.
+* FFMC - FFMC index from the FWI system: 18.7 to 96.20
+* DMC - DMC index from the FWI system: 1.1 to 291.3
+* DC - DC index from the FWI system: 7.9 to 860.6
+* ISI - ISI index from the FWI system: 0.0 to 56.10
+
+4. Methorological information
+* temp - temperature in Celsius degrees: 2.2 to 33.30
+* RH - relative humidity in %: 15.0 to 100
+* wind - wind speed in km/h: 0.40 to 9.40
+* rain - outside rain in mm/m2 : 0.0 to 6.4
+* area - the burned area of the forest (in ha): 0.00 to 1090.84
+
+
+```{r}
+hist(fire$area,40, main = "Histogram of area", xlab = "Area")
+fire["logarea"] <- ifelse(fire$area >0, log(fire$area), NA)
+ggplot(data=fire, aes(x=logarea))+
+  geom_histogram(aes(y=..density..), col="black",fill="white")+
+  stat_function(fun=dnorm, args = list(mean=mean(fire$logarea, na.rm = TRUE), sd = sd(fire$logarea, na.rm=TRUE)),col="red")
+```
+
+
+
+
+
+
+
+### Analysis
+#### Linear Regression
+```{r}
+area_posit <- fire[which(area>0),]
+summary(area_posit)
+
+area_posit
+
+mod_lin <- lm(logarea ~ ., data=area_posit[c(seq(1,12),14,15)])
+summary(mod_lin)
+ols_plot_cooksd_chart(mod_lin)  #number 262 datapoint in this data set, which is id=500
+ols_plot_resid_lev(mod_lin)
+
+```
+
+
+`
+```{r}
+cooksd <- cooks.distance(mod_lin)
+plot(cooksd, pch="*", cex=2, main="Influential Obs by Cooks distance")  # plot cook's distance
+abline(h = 4*mean(cooksd, na.rm=T), col="red")  # add cutoff line
+text(x=1:length(cooksd)+1, y=cooksd+0.001, labels=ifelse(cooksd>4*mean(cooksd, na.rm=T),names(cooksd),""), col="red")
+```
+
+```{r}
+influential = which(cooksd>4*mean(cooksd, na.rm=T))
+area_posit[influential, ]
+dat <- area_posit[-influential,]
+dat
+```
+
+### After dealing with outliers
+```{r}
+new_dat <- rbind(fire[which(fire$area==0),], dat)
+new_dat$burn <- ifelse(new_dat$area==0,0,1)
+new_dat
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
