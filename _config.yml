@@ -1,9 +1,8 @@
-theme: jekyll-theme-cayman
 name: "Group Project"
 navbar:
   title: "Forest Fire"
   left:
-    - text:"Introduction"
+    - text: "Introduction"
       href: introduction.html
     - text: "BST260_group_project"
       href: BST260_group_project.html
