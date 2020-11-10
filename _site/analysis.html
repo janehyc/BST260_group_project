@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Linear analysis</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Group Project</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Introduction</a>
+</li>
+<li>
+  <a href="about.html">Data</a>
+</li>
+<li>
+  <a href="analysis.html">Linear</a>
+</li>
+<li>
+  <a href="logistic.html">Logistic</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Linear analysis</h1>
+
+</div>
+
+
+<div id="linear-regression-analysis" class="section level4">
+<h4>Linear Regression Analysis</h4>
+<pre class="r"><code># Fit linear regression model to area&gt;0 since this is normally distributed
+area_posit &lt;- fire[which(fire$area&gt;0),]
+summary(area_posit)</code></pre>
+<pre><code>##        X               Y            month               day           
+##  Min.   :1.000   Min.   :2.000   Length:270         Length:270        
+##  1st Qu.:3.000   1st Qu.:4.000   Class :character   Class :character  
+##  Median :5.000   Median :4.000   Mode  :character   Mode  :character  
+##  Mean   :4.807   Mean   :4.367                                        
+##  3rd Qu.:7.000   3rd Qu.:5.000                                        
+##  Max.   :9.000   Max.   :9.000                                        
+##       FFMC            DMC              DC             ISI        
+##  Min.   :63.50   Min.   :  3.2   Min.   : 15.3   Min.   : 0.800  
+##  1st Qu.:90.33   1st Qu.: 82.9   1st Qu.:486.5   1st Qu.: 6.800  
+##  Median :91.70   Median :111.7   Median :665.6   Median : 8.400  
+##  Mean   :91.03   Mean   :114.7   Mean   :570.9   Mean   : 9.177  
+##  3rd Qu.:92.97   3rd Qu.:141.3   3rd Qu.:721.3   3rd Qu.:11.375  
+##  Max.   :96.20   Max.   :291.3   Max.   :860.6   Max.   :22.700  
+##       temp             RH             wind            rain        
+##  Min.   : 2.20   Min.   :15.00   Min.   :0.400   Min.   :0.00000  
+##  1st Qu.:16.12   1st Qu.:33.00   1st Qu.:2.700   1st Qu.:0.00000  
+##  Median :20.10   Median :41.00   Median :4.000   Median :0.00000  
+##  Mean   :19.31   Mean   :43.73   Mean   :4.113   Mean   :0.02889  
+##  3rd Qu.:23.40   3rd Qu.:53.00   3rd Qu.:4.900   3rd Qu.:0.00000  
+##  Max.   :33.30   Max.   :96.00   Max.   :9.400   Max.   :6.40000  
+##       area            season      season.cat      logarea       
+##  Min.   :   0.09   autumn:102   Min.   :0.00   Min.   :-2.4079  
+##  1st Qu.:   2.14   spring: 24   1st Qu.:1.00   1st Qu.: 0.7608  
+##  Median :   6.37   summer:125   Median :1.00   Median : 1.8516  
+##  Mean   :  24.60   winter: 19   Mean   :1.43   Mean   : 1.8448  
+##  3rd Qu.:  15.42                3rd Qu.:2.00   3rd Qu.: 2.7358  
+##  Max.   :1090.84                Max.   :3.00   Max.   : 6.9947</code></pre>
+<pre class="r"><code>head(area_posit)</code></pre>
+<pre><code>##     X Y month day FFMC   DMC    DC  ISI temp RH wind rain area season
+## 139 9 9   jul tue 85.8  48.3 313.4  3.9 18.0 42  2.7    0 0.36 summer
+## 140 1 4   sep tue 91.0 129.5 692.6  7.0 21.7 38  2.2    0 0.43 autumn
+## 141 2 5   sep mon 90.9 126.5 686.5  7.0 21.9 39  1.8    0 0.47 autumn
+## 142 1 2   aug wed 95.5  99.9 513.3 13.2 23.3 31  4.5    0 0.55 summer
+## 143 8 6   aug fri 90.1 108.0 529.8 12.5 21.2 51  8.9    0 0.61 summer
+## 144 1 2   jul sat 90.0  51.3 296.3  8.7 16.6 53  5.4    0 0.71 summer
+##     season.cat    logarea
+## 139          1 -1.0216512
+## 140          2 -0.8439701
+## 141          2 -0.7550226
+## 142          1 -0.5978370
+## 143          1 -0.4942963
+## 144          1 -0.3424903</code></pre>
+<pre class="r"><code>mod_lin &lt;- lm(logarea ~X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain+as.factor(season.cat), data=area_posit[c(seq(1,12),15,16)])
+summary(mod_lin)  # DMC and DC are being statistically significant </code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = logarea ~ X + Y + month + day + FFMC + DMC + DC + 
+##     ISI + temp + RH + wind + rain + as.factor(season.cat), data = area_posit[c(seq(1, 
+##     12), 15, 16)])
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -4.2131 -0.9790  0.0380  0.8145  4.4916 
+## 
+## Coefficients: (3 not defined because of singularities)
+##                          Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)             1.2117947  3.9629695   0.306 0.760033    
+## X                       0.0515407  0.0473061   1.090 0.277001    
+## Y                      -0.0944394  0.0960197  -0.984 0.326315    
+## monthaug                0.7546454  1.3660544   0.552 0.581161    
+## monthdec                1.9052997  1.1644253   1.636 0.103075    
+## monthfeb               -0.2741962  0.9130864  -0.300 0.764207    
+## monthjul                0.0373724  1.1677970   0.032 0.974496    
+## monthjun               -0.4647905  1.0983596  -0.423 0.672545    
+## monthmar               -0.4325527  0.8534419  -0.507 0.612730    
+## monthmay                1.2928830  1.7376890   0.744 0.457578    
+## monthoct                3.2689080  1.6666212   1.961 0.050970 .  
+## monthsep                2.0552667  1.5337220   1.340 0.181475    
+## daymon                 -0.0005960  0.3603204  -0.002 0.998682    
+## daysat                  0.6039482  0.3413894   1.769 0.078128 .  
+## daysun                  0.4058246  0.3367923   1.205 0.229382    
+## daythu                  0.2295388  0.3752345   0.612 0.541292    
+## daytue                  0.3295887  0.3519106   0.937 0.349906    
+## daywed                  0.0269697  0.3705798   0.073 0.942043    
+## FFMC                    0.0071617  0.0433667   0.165 0.868969    
+## DMC                     0.0094934  0.0028344   3.349 0.000938 ***
+## DC                     -0.0051541  0.0020759  -2.483 0.013706 *  
+## ISI                    -0.0309518  0.0372786  -0.830 0.407190    
+## temp                    0.0393276  0.0348704   1.128 0.260504    
+## RH                     -0.0004741  0.0100132  -0.047 0.962274    
+## wind                    0.0517875  0.0584917   0.885 0.376822    
+## rain                    0.0457141  0.2420749   0.189 0.850373    
+## as.factor(season.cat)1         NA         NA      NA       NA    
+## as.factor(season.cat)2         NA         NA      NA       NA    
+## as.factor(season.cat)3         NA         NA      NA       NA    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 1.499 on 244 degrees of freedom
+## Multiple R-squared:  0.1254, Adjusted R-squared:  0.0358 
+## F-statistic:   1.4 on 25 and 244 DF,  p-value: 0.1036</code></pre>
+<pre class="r"><code># Outliers
+ols_plot_cooksd_chart(mod_lin)  #number 262 datapoint in this data set, which is id=500
+ols_plot_resid_lev(mod_lin)</code></pre>
+<p><img src="analysis_files/figure-html/unnamed-chunk-1-1.png" width="80%" /><img src="analysis_files/figure-html/unnamed-chunk-1-2.png" width="80%" /></p>
+<pre class="r"><code>cooksd &lt;- cooks.distance(mod_lin)
+plot(cooksd, pch=&quot;*&quot;, cex=2, main=&quot;Influential Obs by Cooks distance&quot;)  # plot cook&#39;s distance
+abline(h = 4*mean(cooksd, na.rm=T), col=&quot;red&quot;)  # add cutoff line
+text(x=1:length(cooksd)+1, y=cooksd+0.001, labels=ifelse(cooksd&gt;4*mean(cooksd, na.rm=T),names(cooksd),&quot;&quot;), col=&quot;red&quot;)</code></pre>
+<p><img src="analysis_files/figure-html/unnamed-chunk-2-1.png" width="80%" /></p>
+<pre class="r"><code># Get rid off the outliers
+influential = which(cooksd&gt;4*mean(cooksd, na.rm=T))  # influential points
+area_posit[influential, ]   #all data for influential points</code></pre>
+<pre><code>##     X Y month day FFMC   DMC    DC  ISI temp RH wind rain    area season
+## 139 9 9   jul tue 85.8  48.3 313.4  3.9 18.0 42  2.7  0.0    0.36 summer
+## 144 1 2   jul sat 90.0  51.3 296.3  8.7 16.6 53  5.4  0.0    0.71 summer
+## 148 8 3   sep tue 84.4  73.4 671.9  3.2 24.2 28  3.6  0.0    0.96 autumn
+## 200 2 4   sep mon 63.5  70.8 665.3  0.8 22.6 38  3.6  0.0   11.32 autumn
+## 239 6 5   sep sat 92.5 121.1 674.4  8.6 25.1 27  4.0  0.0 1090.84 autumn
+## 267 6 5   aug tue 94.3 131.7 607.1 22.7 19.4 55  4.0  0.0    0.17 summer
+## 416 8 6   aug thu 94.8 222.4 698.6 13.9 27.5 27  4.9  0.0  746.28 summer
+## 421 8 8   aug wed 91.7 191.4 635.9  7.8 26.2 36  4.5  0.0  185.76 summer
+## 470 6 3   apr sun 91.0  14.6  25.6 12.3 13.7 33  9.4  0.0   61.13 spring
+## 474 9 4   jun sat 90.5  61.1 252.6  9.4 24.5 50  3.1  0.0   70.32 summer
+## 480 7 4   jul mon 89.2 103.9 431.6  6.4 22.6 57  4.9  0.0  278.53 summer
+## 500 7 5   aug tue 96.1 181.1 671.2 14.3 27.3 63  4.9  6.4   10.82 summer
+## 514 2 4   aug sun 81.6  56.7 665.6  1.9 21.9 71  5.8  0.0   54.29 summer
+##     season.cat     logarea
+## 139          1 -1.02165125
+## 144          1 -0.34249031
+## 148          2 -0.04082199
+## 200          2  2.42657107
+## 239          2  6.99470332
+## 267          1 -1.77195684
+## 416          1  6.61510086
+## 421          1  5.22445552
+## 470          0  4.11300274
+## 474          1  4.25305625
+## 480          1  5.62952577
+## 500          1  2.38139627
+## 514          1  3.99434005</code></pre>
+<pre class="r"><code>dat &lt;- area_posit[-influential,]  #get rid off the influential points
+dat</code></pre>
+<pre><code>##     X Y month day FFMC   DMC    DC  ISI temp RH wind rain   area season
+## 140 1 4   sep tue 91.0 129.5 692.6  7.0 21.7 38  2.2  0.0   0.43 autumn
+## 141 2 5   sep mon 90.9 126.5 686.5  7.0 21.9 39  1.8  0.0   0.47 autumn
+## 142 1 2   aug wed 95.5  99.9 513.3 13.2 23.3 31  4.5  0.0   0.55 summer
+## 143 8 6   aug fri 90.1 108.0 529.8 12.5 21.2 51  8.9  0.0   0.61 summer
+## 145 2 5   aug wed 95.5  99.9 513.3 13.2 23.8 32  5.4  0.0   0.77 summer
+## 146 6 5   aug thu 95.2 131.7 578.8 10.4 27.4 22  4.0  0.0   0.90 summer
+## 147 5 4   mar mon 90.1  39.7  86.6  6.2 13.2 40  5.4  0.0   0.95 spring
+## 149 2 2   aug tue 94.8 108.3 647.1 17.0 17.4 43  6.7  0.0   1.07 summer
+## 150 8 6   sep thu 93.7  80.9 685.2 17.9 23.7 25  4.5  0.0   1.12 autumn
+## 151 6 5   jun fri 92.5  56.4 433.3  7.1 23.2 39  5.4  0.0   1.19 summer
+## 152 9 9   jul sun 90.1  68.6 355.2  7.2 24.8 29  2.2  0.0   1.36 summer
+## 153 3 4   jul sat 90.1  51.2 424.1  6.2 24.6 43  1.8  0.0   1.43 summer
+## 154 5 4   sep fri 94.3  85.1 692.3 15.9 20.1 47  4.9  0.0   1.46 autumn
+## 155 1 5   sep sat 93.4 145.4 721.4  8.1 29.6 27  2.7  0.0   1.46 autumn
+## 156 7 4   aug sun 94.8 108.3 647.1 17.0 16.4 47  1.3  0.0   1.56 summer
+## 157 2 4   sep sat 93.4 145.4 721.4  8.1 28.6 27  2.2  0.0   1.61 autumn
+## 158 2 2   aug wed 92.1 111.2 654.1  9.6 18.4 45  3.6  0.0   1.63 summer
+## 159 2 4   aug wed 92.1 111.2 654.1  9.6 20.5 35  4.0  0.0   1.64 summer
+## 160 7 4   sep fri 92.4 117.9 668.0 12.2 19.0 34  5.8  0.0   1.69 autumn
+## 161 7 4   mar mon 90.1  39.7  86.6  6.2 16.1 29  3.1  0.0   1.75 spring
+## 162 6 4   aug thu 95.2 131.7 578.8 10.4 20.3 41  4.0  0.0   1.90 summer
+## 163 6 3   mar sat 90.6  50.1 100.4  7.8 15.2 31  8.5  0.0   1.94 spring
+## 164 8 6   sep sat 92.5 121.1 674.4  8.6 17.8 56  1.8  0.0   1.95 autumn
+## 165 8 5   sep sun 89.7  90.0 704.4  4.8 17.8 67  2.2  0.0   2.01 autumn
+## 166 6 5   mar thu 84.9  18.2  55.0  3.0  5.3 70  4.5  0.0   2.14 spring
+## 167 6 5   aug wed 92.1 111.2 654.1  9.6 16.6 47  0.9  0.0   2.29 summer
+## 168 6 5   aug wed 96.0 127.1 570.5 16.5 23.4 33  4.5  0.0   2.51 summer
+## 169 6 5   mar fri 91.2  48.3  97.8 12.5 14.6 26  9.4  0.0   2.53 spring
+## 170 8 6   aug thu 95.2 131.7 578.8 10.4 20.7 45  2.2  0.0   2.55 summer
+## 171 5 4   sep wed 92.9 133.3 699.6  9.2 21.9 35  1.8  0.0   2.57 autumn
+## 172 8 6   aug wed 85.6  90.4 609.6  6.6 17.4 50  4.0  0.0   2.69 summer
+## 173 7 4   aug sun 91.4 142.4 601.4 10.6 20.1 39  5.4  0.0   2.74 summer
+## 174 4 4   sep mon 90.9 126.5 686.5  7.0 17.7 39  2.2  0.0   3.07 autumn
+## 175 1 4   aug sat 90.2  96.9 624.2  8.9 14.2 53  1.8  0.0   3.50 summer
+## 176 1 4   aug sat 90.2  96.9 624.2  8.9 20.3 39  4.9  0.0   4.53 summer
+## 177 6 5   apr thu 81.5   9.1  55.2  2.7  5.8 54  5.8  0.0   4.61 spring
+## 178 2 5   aug sun 90.2  99.6 631.2  6.3 19.2 44  2.7  0.0   4.69 summer
+## 179 2 5   sep wed 90.1  82.9 735.7  6.2 18.3 45  2.2  0.0   4.88 autumn
+## 180 8 6   aug tue 88.8 147.3 614.5  9.0 14.4 66  5.4  0.0   5.23 summer
+## 181 1 3   sep sun 92.4 124.1 680.7  8.5 23.9 32  6.7  0.0   5.33 autumn
+## 182 8 6   oct mon 84.9  32.8 664.2  3.0 19.1 32  4.0  0.0   5.44 autumn
+## 183 5 4   feb sun 86.8  15.6  48.3  3.9 12.4 53  2.2  0.0   6.38 winter
+## 184 7 4   oct mon 91.7  48.5 696.1 11.1 16.8 45  4.5  0.0   6.83 autumn
+## 185 8 6   aug fri 93.9 135.7 586.7 15.1 20.8 34  4.9  0.0   6.96 summer
+## 186 2 5   sep tue 91.0 129.5 692.6  7.0 17.6 46  3.1  0.0   7.04 autumn
+## 187 8 6   mar sun 89.3  51.3 102.2  9.6 11.5 39  5.8  0.0   7.19 spring
+## 188 1 5   sep mon 90.9 126.5 686.5  7.0 21.0 42  2.2  0.0   7.30 autumn
+## 189 6 4   mar sat 90.8  41.9  89.4  7.9 13.3 42  0.9  0.0   7.40 spring
+## 190 7 4   mar sun 90.7  44.0  92.4  5.5 11.5 60  4.0  0.0   8.24 spring
+## 191 6 5   mar fri 91.2  48.3  97.8 12.5 11.7 33  4.0  0.0   8.31 spring
+## 192 2 5   aug thu 95.2 131.7 578.8 10.4 24.2 28  2.7  0.0   8.68 summer
+## 193 2 2   aug tue 94.8 108.3 647.1 17.0 24.6 22  4.5  0.0   8.71 summer
+## 194 4 5   sep wed 92.9 133.3 699.6  9.2 24.3 25  4.0  0.0   9.41 autumn
+## 195 2 2   aug tue 94.8 108.3 647.1 17.0 24.6 22  4.5  0.0  10.01 summer
+## 196 2 5   aug fri 93.9 135.7 586.7 15.1 23.5 36  5.4  0.0  10.02 summer
+## 197 6 5   apr thu 81.5   9.1  55.2  2.7  5.8 54  5.8  0.0  10.93 spring
+## 198 4 5   sep thu 92.9 137.0 706.4  9.2 21.5 15  0.9  0.0  11.06 autumn
+## 199 3 4   sep tue 91.0 129.5 692.6  7.0 13.9 59  6.3  0.0  11.24 autumn
+## 201 1 5   sep tue 91.0 129.5 692.6  7.0 21.6 33  2.2  0.0  11.53 autumn
+## 202 6 5   mar sun 90.1  37.6  83.7  7.2 12.4 54  3.6  0.0  12.10 spring
+## 203 7 4   feb sun 83.9   8.7  32.1  2.1  8.8 68  2.2  0.0  13.05 winter
+## 204 8 6   oct wed 91.4  37.9 673.8  5.2 20.2 37  2.7  0.0  13.70 autumn
+## 205 5 6   mar sat 90.6  50.1 100.4  7.8 15.1 64  4.0  0.0  13.99 spring
+## 206 4 5   sep thu 92.9 137.0 706.4  9.2 22.1 34  1.8  0.0  14.57 autumn
+## 207 2 2   aug sat 93.5 139.4 594.2 20.3 22.9 31  7.2  0.0  15.45 summer
+## 208 7 5   sep tue 91.0 129.5 692.6  7.0 20.7 37  2.2  0.0  17.20 autumn
+## 209 6 5   sep fri 92.4 117.9 668.0 12.2 19.6 33  6.3  0.0  19.23 autumn
+## 210 8 3   sep thu 93.7  80.9 685.2 17.9 23.2 26  4.9  0.0  23.41 autumn
+## 211 4 4   oct sat 90.6  43.7 686.9  6.7 18.4 25  3.1  0.0  24.23 autumn
+## 212 7 4   aug sat 93.5 139.4 594.2 20.3  5.1 96  5.8  0.0  26.00 summer
+## 213 7 4   sep fri 94.3  85.1 692.3 15.9 20.1 47  4.9  0.0  26.13 autumn
+## 214 7 3   mar mon 87.6  52.2 103.8  5.0 11.0 46  5.8  0.0  27.35 spring
+## 215 4 4   mar sat 91.7  35.8  80.8  7.8 17.0 27  4.9  0.0  28.66 spring
+## 216 4 4   mar sat 91.7  35.8  80.8  7.8 17.0 27  4.9  0.0  28.66 spring
+## 217 4 4   sep sun 92.4 124.1 680.7  8.5 16.9 60  1.3  0.0  29.48 autumn
+## 218 1 3   sep mon 88.6  91.8 709.9  7.1 12.4 73  6.3  0.0  30.32 autumn
+## 219 4 5   sep wed 92.9 133.3 699.6  9.2 19.4 19  1.3  0.0  31.72 autumn
+## 220 6 5   mar mon 90.1  39.7  86.6  6.2 15.2 27  3.1  0.0  31.86 spring
+## 221 8 6   aug sun 90.2  99.6 631.2  6.3 16.2 59  3.1  0.0  32.07 summer
+## 222 3 4   sep fri 93.3 141.2 713.9 13.9 18.6 49  3.6  0.0  35.88 autumn
+## 223 4 3   mar mon 87.6  52.2 103.8  5.0 11.0 46  5.8  0.0  36.85 spring
+## 224 2 2   jul fri 88.3 150.3 309.9  6.8 13.4 79  3.6  0.0  37.02 summer
+## 225 7 4   sep wed 90.1  82.9 735.7  6.2 15.4 57  4.5  0.0  37.71 autumn
+## 226 4 4   sep sun 93.5 149.3 728.6  8.1 22.9 39  4.9  0.0  48.55 autumn
+## 227 7 5   oct mon 91.7  48.5 696.1 11.1 16.1 44  4.0  0.0  49.37 autumn
+## 228 8 6   aug sat 92.2  81.8 480.8 11.9 20.1 34  4.5  0.0  58.30 summer
+## 229 4 6   sep sun 93.5 149.3 728.6  8.1 28.3 26  3.1  0.0  64.10 autumn
+## 230 8 6   aug sat 92.2  81.8 480.8 11.9 16.4 43  4.0  0.0  71.30 summer
+## 231 4 4   sep wed 92.9 133.3 699.6  9.2 26.4 21  4.5  0.0  88.49 autumn
+## 232 1 5   sep sun 93.5 149.3 728.6  8.1 27.8 27  3.1  0.0  95.18 autumn
+## 233 6 4   sep tue 91.0 129.5 692.6  7.0 18.7 43  2.7  0.0 103.39 autumn
+## 234 9 4   sep tue 84.4  73.4 671.9  3.2 24.3 36  3.1  0.0 105.66 autumn
+## 235 4 5   sep sat 92.5 121.1 674.4  8.6 17.7 25  3.1  0.0 154.88 autumn
+## 236 8 6   aug sun 91.4 142.4 601.4 10.6 19.6 41  5.8  0.0 196.48 summer
+## 237 2 2   sep sat 92.5 121.1 674.4  8.6 18.2 46  1.8  0.0 200.94 autumn
+## 238 1 2   sep tue 91.0 129.5 692.6  7.0 18.8 40  2.2  0.0 212.88 autumn
+## 243 2 4   aug sun 94.2 122.3 589.9 12.9 15.4 66  4.0  0.0  10.13 summer
+## 245 2 4   aug sun 91.8 175.1 700.7 13.8 22.4 54  7.6  0.0   2.87 summer
+## 246 3 4   aug sun 91.8 175.1 700.7 13.8 26.8 38  6.3  0.0   0.76 summer
+## 247 5 4   aug sun 91.8 175.1 700.7 13.8 25.7 39  5.4  0.0   0.09 summer
+## 248 2 4   aug wed 92.2  91.6 503.6  9.6 20.7 70  2.2  0.0   0.75 summer
+## 250 3 4   aug wed 93.1 157.3 666.7 13.5 21.7 40  0.4  0.0   2.47 summer
+## 251 8 5   aug wed 93.1 157.3 666.7 13.5 26.8 25  3.1  0.0   0.68 summer
+## 252 8 5   aug wed 93.1 157.3 666.7 13.5 24.0 36  3.1  0.0   0.24 summer
+## 253 6 5   aug wed 93.1 157.3 666.7 13.5 22.1 37  3.6  0.0   0.21 summer
+## 254 7 4   aug thu 91.9 109.2 565.5  8.0 21.4 38  2.7  0.0   1.52 summer
+## 255 6 3   aug thu 91.6 138.1 621.7  6.3 18.9 41  3.1  0.0  10.34 summer
+## 257 8 6   aug sat 94.2 117.2 581.1 11.0 23.9 41  2.2  0.0   8.02 summer
+## 258 4 3   aug sat 94.2 117.2 581.1 11.0 21.4 44  2.7  0.0   0.68 summer
+## 260 7 4   aug sat 91.8 170.9 692.3 13.7 23.7 40  1.8  0.0   1.38 summer
+## 261 2 4   aug mon 93.6  97.9 542.0 14.4 28.3 32  4.0  0.0   8.85 summer
+## 262 3 4   aug fri 91.6 112.4 573.0  8.9 11.2 84  7.6  0.0   3.30 summer
+## 263 2 4   aug fri 91.6 112.4 573.0  8.9 21.4 42  3.1  0.0   4.25 summer
+## 264 6 3   aug fri 91.1 141.1 629.1  7.1 19.3 39  3.6  0.0   1.56 summer
+## 265 4 4   aug fri 94.3 167.6 684.4 13.0 21.8 53  3.1  0.0   6.54 summer
+## 266 4 4   aug tue 93.7 102.2 550.3 14.6 22.1 54  7.6  0.0   0.79 summer
+## 270 4 4   aug tue 92.1 152.6 658.2 14.3 19.1 53  2.7  0.0   4.40 summer
+## 271 2 2   aug tue 92.1 152.6 658.2 14.3 21.8 56  3.1  0.0   0.52 summer
+## 272 8 6   aug tue 92.1 152.6 658.2 14.3 20.1 58  4.5  0.0   9.27 summer
+## 273 2 5   aug tue 92.1 152.6 658.2 14.3 20.2 47  4.0  0.0   3.09 summer
+## 274 4 6   dec sun 84.4  27.2 353.5  6.8  4.8 57  8.5  0.0   8.98 winter
+## 275 8 6   dec wed 84.0  27.8 354.6  5.3  5.1 61  8.0  0.0  11.19 winter
+## 276 4 6   dec thu 84.6  26.4 352.0  2.0  5.1 61  4.9  0.0   5.38 winter
+## 277 4 4   dec mon 85.4  25.4 349.7  2.6  4.6 21  8.5  0.0  17.85 winter
+## 278 3 4   dec mon 85.4  25.4 349.7  2.6  4.6 21  8.5  0.0  10.73 winter
+## 279 4 4   dec mon 85.4  25.4 349.7  2.6  4.6 21  8.5  0.0  22.03 winter
+## 280 4 4   dec mon 85.4  25.4 349.7  2.6  4.6 21  8.5  0.0   9.77 winter
+## 281 4 6   dec fri 84.7  26.7 352.6  4.1  2.2 59  4.9  0.0   9.27 winter
+## 282 6 5   dec tue 85.4  25.4 349.7  2.6  5.1 24  8.5  0.0  24.77 winter
+## 284 3 4   feb wed 86.9   6.6  18.7  3.2  8.8 35  3.1  0.0   1.10 winter
+## 285 5 4   feb fri 85.2   4.9  15.8  6.3  7.5 46  8.0  0.0  24.24 winter
+## 292 9 4   jul sat 91.6 104.2 474.9  9.0 25.3 39  0.9  0.0   8.00 summer
+## 293 4 5   jul fri 91.6 100.2 466.3  6.3 22.9 40  1.3  0.0   2.64 summer
+## 294 7 6   jul tue 93.1 180.4 430.8 11.0 26.9 28  5.4  0.0  86.45 summer
+## 295 8 6   jul tue 92.3  88.8 440.9  8.5 17.1 67  3.6  0.0   6.57 summer
+## 297 6 4   jun sun 90.4  89.5 290.8  6.4 14.3 46  1.8  0.0   0.90 summer
+## 302 6 5   jun mon 90.4  93.3 298.1  7.5 19.1 39  5.4  0.0   3.52 summer
+## 307 7 4   sep sun 89.6  84.1 714.3  5.7 17.1 53  5.4  0.0   0.41 autumn
+## 308 3 4   sep sun 89.6  84.1 714.3  5.7 23.8 35  3.6  0.0   5.18 autumn
+## 312 6 3   sep sun 92.4 105.8 758.1  9.9 24.8 28  1.8  0.0  14.29 autumn
+## 315 4 4   sep wed 92.6 115.4 777.1  8.8 19.7 41  1.8  0.0   1.58 autumn
+## 318 4 4   sep thu 92.4  96.2 739.4  8.6 19.2 24  4.9  0.0   3.78 autumn
+## 320 5 4   sep thu 92.8 119.0 783.5  7.5 21.6 28  6.3  0.0   4.41 autumn
+## 321 6 3   sep thu 92.8 119.0 783.5  7.5 18.9 34  7.2  0.0  34.36 autumn
+## 322 1 4   sep thu 92.8 119.0 783.5  7.5 16.8 28  4.0  0.0   7.21 autumn
+## 323 6 5   sep thu 92.8 119.0 783.5  7.5 16.8 28  4.0  0.0   1.01 autumn
+## 324 3 5   sep thu 90.7 136.9 822.8  6.8 12.9 39  2.7  0.0   2.18 autumn
+## 325 6 5   sep thu 88.1  53.3 726.9  5.4 13.7 56  1.8  0.0   4.42 autumn
+## 330 4 3   sep sat 92.2 102.3 751.5  8.4 23.5 27  4.0  0.0   3.33 autumn
+## 331 3 3   sep sat 92.2 102.3 751.5  8.4 24.2 27  3.1  0.0   6.58 autumn
+## 332 7 4   sep sat 91.2 124.4 795.3  8.5 21.5 28  4.5  0.0  15.64 autumn
+## 333 4 4   sep sat 91.2 124.4 795.3  8.5 17.1 41  2.2  0.0  11.22 autumn
+## 334 1 4   sep mon 92.1  87.7 721.1  9.5 18.1 54  3.1  0.0   2.13 autumn
+## 338 6 3   sep mon 91.6 108.4 764.0  6.2 23.0 34  2.2  0.0  56.04 autumn
+## 339 8 6   sep mon 91.6 108.4 764.0  6.2 22.7 35  2.2  0.0   7.48 autumn
+## 340 2 4   sep mon 91.6 108.4 764.0  6.2 20.4 41  1.8  0.0   1.47 autumn
+## 341 2 5   sep mon 91.6 108.4 764.0  6.2 19.3 44  2.2  0.0   3.93 autumn
+## 344 8 6   sep mon 91.5 130.1 807.1  7.5 15.9 51  4.5  0.0   2.18 autumn
+## 345 6 3   sep mon 91.5 130.1 807.1  7.5 12.2 66  4.9  0.0   6.10 autumn
+## 346 2 2   sep mon 91.5 130.1 807.1  7.5 16.8 43  3.1  0.0   5.83 autumn
+## 347 1 4   sep mon 91.5 130.1 807.1  7.5 21.3 35  2.2  0.0  28.19 autumn
+## 350 5 4   sep fri 92.1  99.0 745.3  9.6 12.8 64  3.6  0.0   1.64 autumn
+## 351 5 4   sep fri 92.1  99.0 745.3  9.6 10.1 75  3.6  0.0   3.71 autumn
+## 352 4 4   sep fri 92.1  99.0 745.3  9.6 15.4 53  6.3  0.0   7.31 autumn
+## 353 7 4   sep fri 92.1  99.0 745.3  9.6 20.6 43  3.6  0.0   2.03 autumn
+## 354 7 4   sep fri 92.1  99.0 745.3  9.6 19.8 47  2.7  0.0   1.72 autumn
+## 355 7 4   sep fri 92.1  99.0 745.3  9.6 18.7 50  2.2  0.0   5.97 autumn
+## 356 4 4   sep fri 92.1  99.0 745.3  9.6 20.8 35  4.9  0.0  13.06 autumn
+## 357 4 4   sep fri 92.1  99.0 745.3  9.6 20.8 35  4.9  0.0   1.26 autumn
+## 360 1 4   sep fri 92.5 122.0 789.7 10.2 21.1 39  2.2  0.0   8.12 autumn
+## 361 6 5   sep fri 92.5 122.0 789.7 10.2 18.4 42  2.2  0.0   1.09 autumn
+## 362 4 3   sep fri 92.5 122.0 789.7 10.2 17.3 45  4.0  0.0   3.94 autumn
+## 363 7 4   sep fri 88.2  55.2 732.3 11.6 15.2 64  3.1  0.0   0.52 autumn
+## 364 4 3   sep tue 91.9 111.7 770.3  6.5 15.9 53  2.2  0.0   2.93 autumn
+## 365 6 5   sep tue 91.9 111.7 770.3  6.5 21.1 35  2.7  0.0   5.65 autumn
+## 366 6 5   sep tue 91.9 111.7 770.3  6.5 19.6 45  3.1  0.0  20.03 autumn
+## 367 4 5   sep tue 91.1 132.3 812.1 12.5 15.9 38  5.4  0.0   1.75 autumn
+## 369 6 5   sep sat 91.2  94.3 744.4  8.4 16.8 47  4.9  0.0  12.64 autumn
+## 371 7 4   sep sun 91.0 276.3 825.1  7.1 13.8 77  7.6  0.0  11.06 autumn
+## 375 6 5   sep fri 90.3 290.0 855.3  7.4 10.3 78  4.0  0.0  18.30 autumn
+## 376 6 5   sep sat 91.2  94.3 744.4  8.4 15.4 57  4.9  0.0  39.35 autumn
+## 378 2 2   aug sat 93.7 231.1 715.1  8.4 21.9 42  2.2  0.0 174.63 summer
+## 381 5 4   jul wed 93.7 101.3 458.8 11.9 19.3 39  7.2  0.0   7.73 summer
+## 382 8 6   aug thu 90.7 194.1 643.0  6.8 16.2 63  2.7  0.0  16.33 summer
+## 383 8 6   aug wed 95.2 217.7 690.0 18.0 28.2 29  1.8  0.0   5.86 summer
+## 384 9 6   aug thu 91.6 248.4 753.8  6.3 20.5 58  2.7  0.0  42.87 summer
+## 385 8 4   aug sat 91.6 273.8 819.1  7.7 21.3 44  4.5  0.0  12.18 summer
+## 386 2 4   aug sun 91.6 181.3 613.0  7.6 20.9 50  2.2  0.0  16.00 summer
+## 387 3 4   sep sun 90.5  96.7 750.5 11.4 20.6 55  5.4  0.0  24.59 autumn
+## 389 6 4   aug fri 94.8 227.0 706.7 12.0 23.3 34  3.1  0.0  28.74 summer
+## 391 7 4   feb mon 84.7   9.5  58.3  4.1  7.5 71  6.3  0.0   9.96 winter
+## 392 8 6   sep fri 91.1  91.3 738.1  7.2 20.7 46  2.7  0.0  30.18 autumn
+## 393 1 3   sep sun 91.0 276.3 825.1  7.1 21.9 43  4.0  0.0  70.76 autumn
+## 396 4 5   feb sun 85.0   9.0  56.9  3.5 10.1 62  1.8  0.0  51.78 winter
+## 397 4 3   sep sun 90.5  96.7 750.5 11.4 20.4 55  4.9  0.0   3.64 autumn
+## 398 5 6   aug sun 91.6 181.3 613.0  7.6 24.3 33  3.6  0.0   3.63 summer
+## 401 9 5   jun wed 93.3  49.5 297.7 14.0 28.0 34  4.5  0.0   8.16 summer
+## 402 3 4   sep thu 91.1  88.2 731.7  8.3 22.8 46  4.0  0.0   4.95 autumn
+## 405 2 4   sep wed 87.9  84.8 725.1  3.7 21.8 34  2.2  0.0   6.04 autumn
+## 407 6 5   sep sat 87.1 291.3 860.6  4.0 17.0 67  4.9  0.0   3.95 autumn
+## 409 4 3   sep fri 90.3 290.0 855.3  7.4 19.9 44  3.1  0.0   7.80 autumn
+## 412 7 4   feb fri 84.6   3.2  43.6  3.3  8.2 53  9.4  0.0   4.62 winter
+## 413 9 4   jul mon 92.3  92.1 442.1  9.8 22.8 27  4.5  0.0   1.63 summer
+## 417 6 3   jul tue 92.7 164.1 575.8  8.9 26.3 39  3.1  0.0   7.02 summer
+## 419 2 4   aug sun 92.0 203.2 664.5  8.1 24.9 42  5.4  0.0   2.44 summer
+## 420 2 5   aug sun 91.6 181.3 613.0  7.6 24.8 36  4.0  0.0   3.05 summer
+## 423 8 6   jul sun 88.9 263.1 795.9  5.2 29.3 27  3.6  0.0   6.30 summer
+## 424 1 3   sep sat 91.2  94.3 744.4  8.4 22.3 48  4.0  0.0   0.72 autumn
+## 425 8 6   aug sat 93.7 231.1 715.1  8.4 26.9 31  3.6  0.0   4.96 summer
+## 428 2 4   aug mon 92.1 207.0 672.6  8.2 27.9 33  2.2  0.0   2.35 summer
+## 430 3 4   aug sun 91.6 181.3 613.0  7.6 24.6 44  4.0  0.0   3.20 summer
+## 432 1 3   aug sat 92.1 178.0 605.3  9.6 23.3 40  4.0  0.0   6.36 summer
+## 434 2 4   aug sun 93.6 235.1 723.1 10.1 20.9 66  4.9  0.0  15.34 summer
+## 437 8 6   aug mon 92.1 207.0 672.6  8.2 26.8 35  1.3  0.0   0.54 summer
+## 439 2 5   aug sat 93.7 231.1 715.1  8.4 23.6 53  4.0  0.0   6.43 summer
+## 440 1 3   sep fri 91.1  91.3 738.1  7.2 19.1 46  2.2  0.0   0.33 autumn
+## 442 8 6   aug mon 92.1 207.0 672.6  8.2 25.5 29  1.8  0.0   1.23 summer
+## 443 6 5   apr mon 87.9  24.9  41.6  3.7 10.9 64  3.1  0.0   3.35 spring
+## 445 2 5   sep fri 90.3 290.0 855.3  7.4 16.2 58  3.6  0.0   9.96 autumn
+## 451 4 5   aug wed 95.2 217.7 690.0 18.0 23.4 49  5.4  0.0   6.43 summer
+## 452 1 4   aug fri 90.5 196.8 649.9 16.3 11.8 88  4.9  0.0   9.71 summer
+## 458 1 4   aug wed 91.7 191.4 635.9  7.8 19.9 50  4.0  0.0  82.75 summer
+## 459 8 6   aug sat 93.7 231.1 715.1  8.4 18.9 64  4.9  0.0   3.32 summer
+## 460 7 4   aug sat 91.6 273.8 819.1  7.7 15.5 72  8.0  0.0   1.94 summer
+## 463 1 4   sep sun 91.0 276.3 825.1  7.1 14.5 76  7.6  0.0   3.71 autumn
+## 464 6 5   feb tue 75.1   4.4  16.2  1.9  4.6 82  6.3  0.0   5.39 winter
+## 465 6 4   feb tue 75.1   4.4  16.2  1.9  5.1 77  5.4  0.0   2.14 winter
+## 466 2 2   feb sat 79.5   3.6  15.3  1.8  4.6 59  0.9  0.0   6.84 winter
+## 467 6 5   mar mon 87.2  15.1  36.9  7.1 10.2 45  5.8  0.0   3.18 spring
+## 468 3 4   mar wed 90.2  18.5  41.1  7.3 11.2 41  5.4  0.0   5.55 spring
+## 469 6 5   mar thu 91.3  20.6  43.5  8.5 13.3 27  3.6  0.0   6.61 spring
+## 472 4 3   may fri 89.6  25.4  73.7  5.7 18.0 40  4.0  0.0  38.48 spring
+## 473 8 3   jun mon 88.2  96.2 229.0  4.7 14.3 79  4.0  0.0   1.94 summer
+## 475 4 3   jun thu 93.0 103.8 316.7 10.8 26.4 35  2.7  0.0  10.08 summer
+## 476 2 5   jun thu 93.7 121.7 350.2 18.0 22.7 40  9.4  0.0   3.19 summer
+## 477 4 3   jul thu 93.5  85.3 395.0  9.9 27.2 28  1.3  0.0   1.76 summer
+## 478 4 3   jul sun 93.7 101.3 423.4 14.7 26.1 45  4.0  0.0   7.36 summer
+## 479 7 4   jul sun 93.7 101.3 423.4 14.7 18.2 82  4.5  0.0   2.21 summer
+## 481 9 9   jul thu 93.2 114.4 560.0  9.5 30.2 25  4.5  0.0   2.75 summer
+## 483 3 4   aug sun 94.9 130.3 587.1 14.1 23.4 40  5.8  0.0   1.29 summer
+## 485 2 5   aug sun 94.9 130.3 587.1 14.1 33.1 25  4.0  0.0  26.43 summer
+## 486 2 4   aug mon 95.0 135.5 596.3 21.3 30.6 28  3.6  0.0   2.07 summer
+## 487 5 4   aug tue 95.1 141.3 605.8 17.7 24.1 43  6.3  0.0   2.00 summer
+## 488 5 4   aug tue 95.1 141.3 605.8 17.7 26.4 34  3.6  0.0  16.40 summer
+## 489 4 4   aug tue 95.1 141.3 605.8 17.7 19.4 71  7.6  0.0  46.70 summer
+## 494 1 3   aug fri 95.9 158.0 633.6 11.3 27.5 29  4.5  0.0  43.32 summer
+## 495 6 6   aug sat 96.0 164.0 643.0 14.0 30.8 30  4.9  0.0   8.59 summer
+## 497 4 5   aug mon 96.2 175.5 661.8 16.8 32.6 26  3.1  0.0   2.77 summer
+## 498 3 4   aug tue 96.1 181.1 671.2 14.3 32.3 27  2.2  0.0  14.68 summer
+## 499 6 5   aug tue 96.1 181.1 671.2 14.3 33.3 26  2.7  0.0  40.54 summer
+## 504 2 4   aug wed 94.5 139.4 689.1 20.0 29.2 30  4.9  0.0   1.95 summer
+## 505 4 3   aug wed 94.5 139.4 689.1 20.0 28.9 29  4.9  0.0  49.59 summer
+## 506 1 2   aug thu 91.0 163.2 744.4 10.1 26.7 35  1.8  0.0   5.80 summer
+## 510 5 4   aug fri 91.0 166.9 752.6  7.1 21.1 71  7.6  1.4   2.17 summer
+## 511 6 5   aug fri 91.0 166.9 752.6  7.1 18.2 62  5.4  0.0   0.43 summer
+## 513 4 3   aug sun 81.6  56.7 665.6  1.9 27.8 32  2.7  0.0   6.44 summer
+## 515 7 4   aug sun 81.6  56.7 665.6  1.9 21.2 70  6.7  0.0  11.16 summer
+##     season.cat      logarea
+## 140          2 -0.843970070
+## 141          2 -0.755022584
+## 142          1 -0.597837001
+## 143          1 -0.494296322
+## 145          1 -0.261364764
+## 146          1 -0.105360516
+## 147          0 -0.051293294
+## 149          1  0.067658648
+## 150          2  0.113328685
+## 151          1  0.173953307
+## 152          1  0.307484700
+## 153          1  0.357674444
+## 154          2  0.378436436
+## 155          2  0.378436436
+## 156          1  0.444685821
+## 157          2  0.476234179
+## 158          1  0.488580015
+## 159          1  0.494696242
+## 160          2  0.524728529
+## 161          0  0.559615788
+## 162          1  0.641853886
+## 163          0  0.662687973
+## 164          2  0.667829373
+## 165          2  0.698134722
+## 166          0  0.760805829
+## 167          1  0.828551818
+## 168          1  0.920282753
+## 169          0  0.928219303
+## 170          1  0.936093359
+## 171          2  0.943905899
+## 172          1  0.989541194
+## 173          1  1.007957920
+## 174          2  1.121677562
+## 175          1  1.252762968
+## 176          1  1.510721939
+## 177          0  1.528227857
+## 178          1  1.545432582
+## 179          2  1.585145220
+## 180          1  1.654411278
+## 181          2  1.673351238
+## 182          2  1.693779061
+## 183          3  1.853168097
+## 184          2  1.921324674
+## 185          1  1.940179474
+## 186          2  1.951608170
+## 187          0  1.972691172
+## 188          2  1.987874348
+## 189          0  2.001480000
+## 190          0  2.109000344
+## 191          0  2.117459609
+## 192          1  2.161021529
+## 193          1  2.164471791
+## 194          2  2.241772954
+## 195          1  2.303584593
+## 196          1  2.304583096
+## 197          0  2.391511302
+## 198          2  2.403334996
+## 199          2  2.419478844
+## 201          2  2.444952334
+## 202          0  2.493205453
+## 203          3  2.568788134
+## 204          2  2.617395833
+## 205          0  2.638342789
+## 206          2  2.678964620
+## 207          1  2.737609003
+## 208          2  2.844909384
+## 209          2  2.956471560
+## 210          2  3.153163282
+## 211          2  3.187591535
+## 212          1  3.258096538
+## 213          2  3.263084080
+## 214          0  3.308716529
+## 215          0  3.355502422
+## 216          0  3.355502422
+## 217          2  3.383712067
+## 218          2  3.411807561
+## 219          2  3.456947397
+## 220          0  3.461351304
+## 221          1  3.467921014
+## 222          2  3.580180037
+## 223          0  3.606855619
+## 224          1  3.611458307
+## 225          2  3.629925311
+## 226          2  3.882594195
+## 227          2  3.899342952
+## 228          1  4.065602093
+## 229          2  4.160444364
+## 230          1  4.266896327
+## 231          2  4.482889551
+## 232          2  4.555769836
+## 233          2  4.638508246
+## 234          2  4.660226392
+## 235          2  5.042650624
+## 236          1  5.280560645
+## 237          2  5.303006356
+## 238          2  5.360728627
+## 243          1  2.315501318
+## 245          1  1.054312030
+## 246          1 -0.274436846
+## 247          1 -2.407945609
+## 248          1 -0.287682072
+## 250          1  0.904218151
+## 251          1 -0.385662481
+## 252          1 -1.427116356
+## 253          1 -1.560647748
+## 254          1  0.418710335
+## 255          1  2.336019869
+## 257          1  2.081938422
+## 258          1 -0.385662481
+## 260          1  0.322083499
+## 261          1  2.180417459
+## 262          1  1.193922468
+## 263          1  1.446918983
+## 264          1  0.444685821
+## 265          1  1.877937165
+## 266          1 -0.235722334
+## 270          1  1.481604541
+## 271          1 -0.653926467
+## 272          1  2.226783380
+## 273          1  1.128171091
+## 274          3  2.194999882
+## 275          3  2.415020522
+## 276          3  1.682688374
+## 277          3  2.882003508
+## 278          3  2.373043557
+## 279          3  3.092405161
+## 280          3  2.279316466
+## 281          3  2.226783380
+## 282          3  3.209633244
+## 284          3  0.095310180
+## 285          3  3.188004161
+## 292          1  2.079441542
+## 293          1  0.970778917
+## 294          1  4.459566212
+## 295          1  1.882513832
+## 297          1 -0.105360516
+## 302          1  1.258460990
+## 307          2 -0.891598119
+## 308          2  1.644805056
+## 312          2  2.659559992
+## 315          2  0.457424847
+## 318          2  1.329724010
+## 320          2  1.483874689
+## 321          2  3.536893097
+## 322          2  1.975468951
+## 323          2  0.009950331
+## 324          2  0.779324877
+## 325          2  1.486139696
+## 330          2  1.202972304
+## 331          2  1.884034745
+## 332          2  2.749831735
+## 333          2  2.417697900
+## 334          2  0.756121980
+## 338          2  4.026065721
+## 339          2  2.012232792
+## 340          2  0.385262401
+## 341          2  1.368639426
+## 344          2  0.779324877
+## 345          2  1.808288771
+## 346          2  1.763017000
+## 347          2  3.338967305
+## 350          2  0.494696242
+## 351          2  1.311031877
+## 352          2  1.989243274
+## 353          2  0.708035793
+## 354          2  0.542324291
+## 355          2  1.786746927
+## 356          2  2.569554124
+## 357          2  0.231111721
+## 360          2  2.094330154
+## 361          2  0.086177696
+## 362          2  1.371180723
+## 363          2 -0.653926467
+## 364          2  1.075002423
+## 365          2  1.731655545
+## 366          2  2.997231150
+## 367          2  0.559615788
+## 369          2  2.536866389
+## 371          2  2.403334996
+## 375          2  2.906901060
+## 376          2  3.672495975
+## 378          1  5.162669450
+## 381          1  2.045108863
+## 382          1  2.793003907
+## 383          1  1.768149604
+## 384          1  3.758172281
+## 385          1  2.499795262
+## 386          1  2.772588722
+## 387          2  3.202339856
+## 389          1  3.358289881
+## 391          3  2.298577072
+## 392          2  3.407179453
+## 393          2  4.259293869
+## 396          3  3.947003974
+## 397          2  1.291983682
+## 398          1  1.289232648
+## 401          1  2.099244169
+## 402          2  1.599387577
+## 405          2  1.798404012
+## 407          2  1.373715579
+## 409          2  2.054123734
+## 412          3  1.530394705
+## 413          1  0.488580015
+## 417          1  1.948763218
+## 419          1  0.891998039
+## 420          1  1.115141591
+## 423          1  1.840549633
+## 424          2 -0.328504067
+## 425          1  1.601405741
+## 428          1  0.854415328
+## 430          1  1.163150810
+## 432          1  1.850028377
+## 434          1  2.730463796
+## 437          1 -0.616186139
+## 439          1  1.860974538
+## 440          2 -1.108662625
+## 442          1  0.207014169
+## 443          0  1.208960346
+## 445          2  2.298577072
+## 451          1  1.860974538
+## 452          1  2.273156282
+## 458          1  4.415824014
+## 459          1  1.199964783
+## 460          1  0.662687973
+## 463          2  1.311031877
+## 464          3  1.684545385
+## 465          3  0.760805829
+## 466          3  1.922787732
+## 467          0  1.156881197
+## 468          0  1.713797928
+## 469          0  1.888583654
+## 472          0  3.650138626
+## 473          1  0.662687973
+## 475          1  2.310553263
+## 476          1  1.160020917
+## 477          1  0.565313809
+## 478          1  1.996059933
+## 479          1  0.792992516
+## 481          1  1.011600912
+## 483          1  0.254642218
+## 485          1  3.274499729
+## 486          1  0.727548607
+## 487          1  0.693147181
+## 488          1  2.797281335
+## 489          1  3.843744165
+## 494          1  3.768614422
+## 495          1  2.150598736
+## 497          1  1.018847320
+## 498          1  2.686486023
+## 499          1  3.702289141
+## 504          1  0.667829373
+## 505          1  3.903789201
+## 506          1  1.757857918
+## 510          1  0.774727168
+## 511          1 -0.843970070
+## 513          1  1.862528540
+## 515          1  2.412335957</code></pre>
+<pre class="r"><code>#Fit linear regression again, now without the influential points and outliers
+mod_lin2 &lt;- lm(logarea ~ ., data=dat[c(seq(1,12),15,16)])
+summary(mod_lin2)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = logarea ~ ., data = dat[c(seq(1, 12), 15, 16)])
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.9746 -0.9080 -0.0007  0.7724  3.5148 
+## 
+## Coefficients: (1 not defined because of singularities)
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  0.987342   4.994567   0.198 0.843467    
+## X            0.032411   0.044763   0.724 0.469771    
+## Y           -0.101419   0.092957  -1.091 0.276398    
+## monthaug     1.313931   1.374839   0.956 0.340224    
+## monthdec     2.022285   1.150576   1.758 0.080135 .  
+## monthfeb    -0.043227   0.925304  -0.047 0.962780    
+## monthjul     0.789941   1.219786   0.648 0.517883    
+## monthjun    -0.028542   1.132933  -0.025 0.979922    
+## monthmar    -0.119666   0.904959  -0.132 0.894914    
+## monthmay     1.731173   1.647245   1.051 0.294379    
+## monthoct     3.860256   1.625441   2.375 0.018372 *  
+## monthsep     2.582194   1.532596   1.685 0.093368 .  
+## daymon      -0.115957   0.333272  -0.348 0.728206    
+## daysat       0.525835   0.317920   1.654 0.099489 .  
+## daysun       0.440884   0.312954   1.409 0.160244    
+## daythu       0.088689   0.347098   0.256 0.798553    
+## daytue       0.609855   0.329800   1.849 0.065711 .  
+## daywed      -0.085819   0.340491  -0.252 0.801231    
+## FFMC         0.020687   0.056889   0.364 0.716462    
+## DMC          0.009157   0.002689   3.406 0.000778 ***
+## DC          -0.005234   0.001983  -2.640 0.008856 ** 
+## ISI         -0.011857   0.037883  -0.313 0.754582    
+## temp        -0.011517   0.033153  -0.347 0.728616    
+## RH          -0.008238   0.009472  -0.870 0.385330    
+## wind         0.002567   0.055097   0.047 0.962878    
+## rain         0.098441   1.030367   0.096 0.923969    
+## season.cat         NA         NA      NA       NA    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 1.362 on 231 degrees of freedom
+## Multiple R-squared:  0.1515, Adjusted R-squared:  0.05972 
+## F-statistic:  1.65 on 25 and 231 DF,  p-value: 0.03051</code></pre>
+<pre class="r"><code>plot(mod_lin2, which=c(1,2,3))</code></pre>
+<pre><code>## Warning: not plotting observations with leverage one:
+##   232, 254</code></pre>
+<pre class="r"><code># Linear model with forward selection &amp; backward elimination based on AIC
+full.model &lt;- lm(logarea ~., data = dat[c(seq(1,12),15,16)])
+step.forw &lt;- step(lm(logarea~1, data=dat[c(seq(1,12),15,16)]), ~X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain, direction = &quot;forward&quot;)</code></pre>
+<pre><code>## Start:  AIC=175.77
+## logarea ~ 1
+## 
+##         Df Sum of Sq    RSS    AIC
+## + ISI    1    6.1318 499.20 174.63
+## + temp   1    4.2722 501.06 175.59
+## &lt;none&gt;               505.33 175.77
+## + FFMC   1    1.8494 503.48 176.83
+## + rain   1    1.0318 504.30 177.24
+## + Y      1    0.7418 504.59 177.39
+## + RH     1    0.6581 504.67 177.43
+## + DC     1    0.6023 504.73 177.46
+## + wind   1    0.3736 504.96 177.58
+## + X      1    0.1436 505.19 177.69
+## + DMC    1    0.0142 505.32 177.76
+## + month  9   28.4319 476.90 178.89
+## + day    6   16.8713 488.46 179.04
+## 
+## Step:  AIC=174.63
+## logarea ~ ISI
+## 
+##         Df Sum of Sq    RSS    AIC
+## &lt;none&gt;               499.20 174.63
+## + RH     1    1.5252 497.68 175.84
+## + rain   1    1.2029 498.00 176.01
+## + Y      1    1.1403 498.06 176.04
+## + DMC    1    0.9407 498.26 176.15
+## + temp   1    0.9073 498.29 176.16
+## + wind   1    0.6063 498.59 176.32
+## + FFMC   1    0.4141 498.79 176.42
+## + X      1    0.3244 498.88 176.46
+## + DC     1    0.0082 499.19 176.63
+## + day    6   16.7117 482.49 177.88
+## + month  9   22.3065 476.89 180.88</code></pre>
+<pre class="r"><code>step.back &lt;- step(full.model, direction = &quot;backward&quot;)</code></pre>
+<pre><code>## Start:  AIC=183.53
+## logarea ~ X + Y + month + day + FFMC + DMC + DC + ISI + temp + 
+##     RH + wind + rain + season.cat
+## 
+## 
+## Step:  AIC=183.53
+## logarea ~ X + Y + month + day + FFMC + DMC + DC + ISI + temp + 
+##     RH + wind + rain
+## 
+##         Df Sum of Sq    RSS    AIC
+## - wind   1     0.004 428.76 181.53
+## - rain   1     0.017 428.77 181.54
+## - ISI    1     0.182 428.93 181.64
+## - temp   1     0.224 428.98 181.67
+## - FFMC   1     0.245 429.00 181.68
+## - X      1     0.973 429.72 182.12
+## - day    6    18.275 447.03 182.26
+## - RH     1     1.404 430.16 182.37
+## - Y      1     2.209 430.96 182.85
+## &lt;none&gt;               428.75 183.53
+## - month  9    37.254 466.01 186.95
+## - DC     1    12.936 441.69 189.17
+## - DMC    1    21.529 450.28 194.12
+## 
+## Step:  AIC=181.54
+## logarea ~ X + Y + month + day + FFMC + DMC + DC + ISI + temp + 
+##     RH + rain
+## 
+##         Df Sum of Sq    RSS    AIC
+## - rain   1     0.020 428.78 179.55
+## - ISI    1     0.184 428.94 179.65
+## - temp   1     0.236 428.99 179.68
+## - FFMC   1     0.242 429.00 179.68
+## - X      1     0.979 429.73 180.12
+## - day    6    18.335 447.09 180.30
+## - RH     1     1.412 430.17 180.38
+## - Y      1     2.223 430.98 180.86
+## &lt;none&gt;               428.76 181.53
+## - month  9    37.269 466.02 184.96
+## - DC     1    12.932 441.69 187.17
+## - DMC    1    21.779 450.53 192.27
+## 
+## Step:  AIC=179.55
+## logarea ~ X + Y + month + day + FFMC + DMC + DC + ISI + temp + 
+##     RH
+## 
+##         Df Sum of Sq    RSS    AIC
+## - ISI    1     0.201 428.98 177.67
+## - temp   1     0.223 429.00 177.68
+## - FFMC   1     0.250 429.03 177.70
+## - X      1     0.981 429.76 178.13
+## - day    6    18.354 447.13 178.32
+## - RH     1     1.395 430.17 178.38
+## - Y      1     2.237 431.01 178.88
+## &lt;none&gt;               428.78 179.55
+## - month  9    37.476 466.25 183.08
+## - DC     1    13.013 441.79 185.23
+## - DMC    1    21.864 450.64 190.33
+## 
+## Step:  AIC=177.67
+## logarea ~ X + Y + month + day + FFMC + DMC + DC + temp + RH
+## 
+##         Df Sum of Sq    RSS    AIC
+## - FFMC   1     0.083 429.06 175.72
+## - temp   1     0.267 429.24 175.83
+## - X      1     0.919 429.90 176.22
+## - day    6    18.312 447.29 176.41
+## - RH     1     1.558 430.53 176.60
+## - Y      1     2.120 431.10 176.94
+## &lt;none&gt;               428.98 177.67
+## - month  9    40.010 468.99 182.59
+## - DC     1    12.934 441.91 183.30
+## - DMC    1    22.914 451.89 189.04
+## 
+## Step:  AIC=175.72
+## logarea ~ X + Y + month + day + DMC + DC + temp + RH
+## 
+##         Df Sum of Sq    RSS    AIC
+## - temp   1     0.229 429.29 173.85
+## - X      1     0.899 429.96 174.26
+## - day    6    18.249 447.31 174.42
+## - RH     1     1.723 430.78 174.75
+## - Y      1     2.156 431.22 175.01
+## &lt;none&gt;               429.06 175.72
+## - month  9    39.933 468.99 180.59
+## - DC     1    13.726 442.79 181.81
+## - DMC    1    24.395 453.45 187.93
+## 
+## Step:  AIC=173.85
+## logarea ~ X + Y + month + day + DMC + DC + RH
+## 
+##         Df Sum of Sq    RSS    AIC
+## - day    6    18.022 447.31 172.42
+## - X      1     1.008 430.30 172.46
+## - RH     1     2.032 431.32 173.07
+## - Y      1     2.361 431.65 173.26
+## &lt;none&gt;               429.29 173.85
+## - DC     1    14.038 443.33 180.12
+## - DMC    1    24.169 453.46 185.93
+## - month  9    55.884 485.17 187.31
+## 
+## Step:  AIC=172.42
+## logarea ~ X + Y + month + DMC + DC + RH
+## 
+##         Df Sum of Sq    RSS    AIC
+## - X      1     0.996 448.31 171.00
+## - RH     1     1.333 448.64 171.19
+## - Y      1     2.796 450.11 172.03
+## &lt;none&gt;               447.31 172.42
+## - DC     1    15.327 462.64 179.08
+## - month  9    54.709 502.02 184.08
+## - DMC    1    27.839 475.15 185.94
+## 
+## Step:  AIC=171
+## logarea ~ Y + month + DMC + DC + RH
+## 
+##         Df Sum of Sq    RSS    AIC
+## - RH     1     1.083 449.39 169.62
+## - Y      1     1.834 450.14 170.04
+## &lt;none&gt;               448.31 171.00
+## - DC     1    14.482 462.79 177.17
+## - month  9    53.721 502.03 182.08
+## - DMC    1    26.874 475.18 183.96
+## 
+## Step:  AIC=169.62
+## logarea ~ Y + month + DMC + DC
+## 
+##         Df Sum of Sq    RSS    AIC
+## - Y      1     1.775 451.16 168.63
+## &lt;none&gt;               449.39 169.62
+## - DC     1    14.348 463.74 175.69
+## - month  9    53.707 503.10 180.63
+## - DMC    1    26.021 475.41 182.08
+## 
+## Step:  AIC=168.63
+## logarea ~ month + DMC + DC
+## 
+##         Df Sum of Sq    RSS    AIC
+## &lt;none&gt;               451.16 168.63
+## - DC     1    13.848 465.01 174.40
+## - month  9    52.829 503.99 179.09
+## - DMC    1    25.059 476.22 180.52</code></pre>
+<pre class="r"><code>summary(step.forw)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = logarea ~ ISI, data = dat[c(seq(1, 12), 15, 16)])
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -4.0204 -1.0208 -0.0905  0.8410  3.5457 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  2.14044    0.21716   9.857   &lt;2e-16 ***
+## ISI         -0.03826    0.02162  -1.770    0.078 .  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 1.399 on 255 degrees of freedom
+## Multiple R-squared:  0.01213,    Adjusted R-squared:  0.00826 
+## F-statistic: 3.132 on 1 and 255 DF,  p-value: 0.07795</code></pre>
+<pre class="r"><code>summary(step.back)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = logarea ~ month + DMC + DC, data = dat[c(seq(1, 
+##     12), 15, 16)])
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.7872 -0.9334 -0.0507  0.8514  3.6869 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  1.840299   0.787455   2.337 0.020245 *  
+## monthaug     1.563758   1.231400   1.270 0.205324    
+## monthdec     2.225481   1.059302   2.101 0.036672 *  
+## monthfeb     0.247090   0.893731   0.276 0.782420    
+## monthjul     1.113326   1.081491   1.029 0.304290    
+## monthjun     0.079900   1.025060   0.078 0.937934    
+## monthmar     0.232653   0.844752   0.275 0.783233    
+## monthmay     1.958612   1.567324   1.250 0.212618    
+## monthoct     3.979868   1.522284   2.614 0.009492 ** 
+## monthsep     2.833618   1.406153   2.015 0.044980 *  
+## DMC          0.009194   0.002492   3.689 0.000277 ***
+## DC          -0.005187   0.001892  -2.742 0.006553 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 1.357 on 245 degrees of freedom
+## Multiple R-squared:  0.1072, Adjusted R-squared:  0.06711 
+## F-statistic: 2.674 on 11 and 245 DF,  p-value: 0.00293</code></pre>
+<pre class="r"><code>table1&lt;- matrix(c(summary(mod_lin)$r.squared, summary(mod_lin)$adj.r.squared, sqrt(mean(mod_lin$residuals^2)),AIC(mod_lin), BIC(mod_lin),
+                  summary(mod_lin2)$r.squared, summary(mod_lin2)$adj.r.squared, sqrt(mean(mod_lin2$residuals^2)),AIC(mod_lin2), BIC(mod_lin2),
+                  summary(step.forw)$r.squared, summary(step.forw)$adj.r.squared, sqrt(mean(step.forw$residuals^2)),AIC(step.forw), BIC(step.forw),
+                  summary(step.back)$r.squared, summary(step.back)$adj.r.squared, sqrt(mean(step.back$residuals^2)),AIC(step.back), BIC(step.back)), ncol=5,nrow=4, byrow=TRUE)
+colnames(table1)&lt;- c(&quot;R^2&quot;, &quot;Adjusted R^2&quot;, &quot;Square root of MSE&quot;,&quot;AIC&quot;, &quot;BIC&quot;)
+rownames(table1)&lt;- c(&quot;logarea ~.&quot;,
+                     &quot;logarea~., (w/o influential points)&quot;,
+                     &quot;model with forward selection based on AIC&quot;,
+                     &quot;model with backward elimination based on AIC&quot;)
+table1 &lt;- as.table(table1)
+kable(table1)</code></pre>
+<table>
+<colgroup>
+<col width="42%" />
+<col width="9%" />
+<col width="12%" />
+<col width="17%" />
+<col width="9%" />
+<col width="9%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">R^2</th>
+<th align="right">Adjusted R^2</th>
+<th align="right">Square root of MSE</th>
+<th align="right">AIC</th>
+<th align="right">BIC</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">logarea ~.</td>
+<td align="right">0.1254112</td>
+<td align="right">0.0358017</td>
+<td align="right">1.425126</td>
+<td align="right">1011.5275</td>
+<td align="right">1108.6849</td>
+</tr>
+<tr class="even">
+<td align="left">logarea~., (w/o influential points)</td>
+<td align="right">0.1515462</td>
+<td align="right">0.0597222</td>
+<td align="right">1.291624</td>
+<td align="right">914.8673</td>
+<td align="right">1010.6923</td>
+</tr>
+<tr class="odd">
+<td align="left">model with forward selection based on AIC</td>
+<td align="right">0.0121343</td>
+<td align="right">0.0082603</td>
+<td align="right">1.393706</td>
+<td align="right">905.9650</td>
+<td align="right">916.6122</td>
+</tr>
+<tr class="even">
+<td align="left">model with backward elimination based on AIC</td>
+<td align="right">0.1071920</td>
+<td align="right">0.0671067</td>
+<td align="right">1.324955</td>
+<td align="right">899.9630</td>
+<td align="right">946.1009</td>
+</tr>
+</tbody>
+</table>
+<p><img src="analysis_files/figure-html/unnamed-chunk-3-1.png" width="80%" /><img src="analysis_files/figure-html/unnamed-chunk-3-2.png" width="80%" /><img src="analysis_files/figure-html/unnamed-chunk-3-3.png" width="80%" /></p>
+</div>
+<div id="new-complete-dataset" class="section level3">
+<h3>New complete dataset</h3>
+<pre class="r"><code>new_dat &lt;- rbind(fire[which(fire$area==0),], dat)   #join the area_positive w/o influential points to the data w/ area=0
+new_dat$burn &lt;- ifelse(new_dat$area==0,0,1)  #to get the new dataset without the influential points
+head(new_dat)</code></pre>
+<pre><code>##   X Y month day FFMC  DMC    DC  ISI temp RH wind rain area season season.cat
+## 1 7 5   mar fri 86.2 26.2  94.3  5.1  8.2 51  6.7  0.0    0 spring          0
+## 2 7 4   oct tue 90.6 35.4 669.1  6.7 18.0 33  0.9  0.0    0 autumn          2
+## 3 7 4   oct sat 90.6 43.7 686.9  6.7 14.6 33  1.3  0.0    0 autumn          2
+## 4 8 6   mar fri 91.7 33.3  77.5  9.0  8.3 97  4.0  0.2    0 spring          0
+## 5 8 6   mar sun 89.3 51.3 102.2  9.6 11.4 99  1.8  0.0    0 spring          0
+## 6 8 6   aug sun 92.3 85.3 488.0 14.7 22.2 29  5.4  0.0    0 summer          1
+##   logarea burn
+## 1      NA    0
+## 2      NA    0
+## 3      NA    0
+## 4      NA    0
+## 5      NA    0
+## 6      NA    0</code></pre>
+<pre class="r"><code>md.pattern(new_dat)</code></pre>
+<p><img src="analysis_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<pre><code>##     X Y month day FFMC DMC DC ISI temp RH wind rain area season season.cat burn
+## 257 1 1     1   1    1   1  1   1    1  1    1    1    1      1          1    1
+## 247 1 1     1   1    1   1  1   1    1  1    1    1    1      1          1    1
+##     0 0     0   0    0   0  0   0    0  0    0    0    0      0          0    0
+##     logarea    
+## 257       1   0
+## 247       0   1
+##         247 247</code></pre>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

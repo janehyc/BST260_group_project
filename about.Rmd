@@ -1,0 +1,63 @@
+---
+title: "Data"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(broom)
+library(olsrr)
+library(ggplot2)
+library(VGAM)
+library(nnet)
+library(DescTools)
+library(ResourceSelection)
+library(LogisticDx)
+library(knitr)
+library(mice)
+library(caret)
+library(leaps)
+library(MASS)
+library(glmnet)
+```
+
+## Forest Fire
+```{r}
+# Add season category 
+fire <- read.csv("forestfires.csv", header=TRUE, sep = ",")
+fire$season <- rep("spring", 517)
+for (i in 1:517){
+if (fire$month[i] %in% c("feb","jan","dec")) fire$season[i] <- "winter"
+if (fire$month[i] %in% c("oct","nov","sep")) fire$season[i] <- "autumn"
+if (fire$month[i] %in% c("aug","jul","jun")) fire$season[i] <- "summer"
+}
+fire$season <- as.factor(fire$season)
+
+fire$season.cat <- rep(0, 517)
+for (i in 1:517){
+  if (fire$season[i] == "summer") {
+    fire$season.cat[i] <- 1
+  }
+  if (fire$season[i] == "autumn") {
+    fire$season.cat[i] <- 2
+  }
+  if (fire$season[i] =="winter") {
+    fire$season.cat[i] <- 3
+  }
+}
+head(fire)
+```
+
+
+```{r}
+# Area log transformation (for area>0)
+hist(fire$area,40, main = "Histogram of area", xlab = "Area")
+fire["logarea"] <- ifelse(fire$area >0, log(fire$area), NA)
+ggplot(data=fire, aes(x=logarea))+
+  geom_histogram(aes(y=..density..), col="black",fill="white")+
+  stat_function(fun=dnorm, args = list(mean=mean(fire$logarea, na.rm = TRUE), sd = sd(fire$logarea, na.rm=TRUE)),col="red")
+```
+
+
+
+
