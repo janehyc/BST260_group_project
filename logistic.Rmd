@@ -1,0 +1,18 @@
+---
+title: "Logistic"
+---
+
+### Logistic Regression
+```{r, out.width="80%"}
+# Fit Logistic Regression
+lg_burn <- glm(burn ~ X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain, family=binomial(),data=new_dat)
+summary(lg_burn)
+lg_burn2 <- glm(burn ~X+Y+month+day+FFMC+DMC+DC+ISI+temp+I(temp^2)+RH+wind+rain, family=binomial(), data=new_dat)
+summary(lg_burn2)
+
+hoslem.test(new_dat$burn, fitted(lg_burn), g=10)  #not a poor fit (small P-value, poor fit, H0:good fit)
+hoslem.test(new_dat$burn, fitted(lg_burn2), g=10) #not a poor fit
+
+gof(lg_burn)  #AUC=64.0%
+gof(lg_burn2) #AUC=64.7%
+```

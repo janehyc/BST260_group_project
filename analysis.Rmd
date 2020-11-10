@@ -1,77 +1,13 @@
 ---
-title: "Group_project"
+title: "Linear analysis"
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)
-library(dplyr)
-library(broom)
-library(olsrr)
-library(ggplot2)
-library(VGAM)
-library(nnet)
-library(DescTools)
-library(ResourceSelection)
-library(LogisticDx)
-library(knitr)
-library(mice)
-library(caret)
-library(leaps)
-library(MASS)
-library(glmnet)
-```
-
-## Forest Fire
-```{r}
-# Add season category 
-fire <- read.csv("forestfires.csv", header=TRUE, sep = ",")
-fire$season <- rep("spring", 517)
-for (i in 1:517){
-if (fire$month[i] %in% c("feb","jan","dec")) fire$season[i] <- "winter"
-if (fire$month[i] %in% c("oct","nov","sep")) fire$season[i] <- "autumn"
-if (fire$month[i] %in% c("aug","jul","jun")) fire$season[i] <- "summer"
-}
-fire$season <- as.factor(fire$season)
-
-fire$season.cat <- rep(0, 517)
-for (i in 1:517){
-  if (fire$season[i] == "summer") {
-    fire$season.cat[i] <- 1
-  }
-  if (fire$season[i] == "autumn") {
-    fire$season.cat[i] <- 2
-  }
-  if (fire$season[i] =="winter") {
-    fire$season.cat[i] <- 3
-  }
-}
-fire
-```
-
-
-
-```{r}
-# Area log transformation (for area>0)
-hist(fire$area,40, main = "Histogram of area", xlab = "Area")
-fire["logarea"] <- ifelse(fire$area >0, log(fire$area), NA)
-ggplot(data=fire, aes(x=logarea))+
-  geom_histogram(aes(y=..density..), col="black",fill="white")+
-  stat_function(fun=dnorm, args = list(mean=mean(fire$logarea, na.rm = TRUE), sd = sd(fire$logarea, na.rm=TRUE)),col="red")
-```
-
-
-
-
-
-
-
 #### Linear Regression Analysis
-```{r}
+```{r, fig.show='hold', out.width="80%"}
 # Fit linear regression model to area>0 since this is normally distributed
 area_posit <- fire[which(fire$area>0),]
 summary(area_posit)
-area_posit
+head(area_posit)
 
 mod_lin <- lm(logarea ~X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain+as.factor(season.cat), data=area_posit[c(seq(1,12),15,16)])
 summary(mod_lin)  # DMC and DC are being statistically significant 
@@ -83,15 +19,14 @@ ols_plot_resid_lev(mod_lin)
 ```
 
 
-`
-```{r}
+```{r, out.width="80%"}
 cooksd <- cooks.distance(mod_lin)
 plot(cooksd, pch="*", cex=2, main="Influential Obs by Cooks distance")  # plot cook's distance
 abline(h = 4*mean(cooksd, na.rm=T), col="red")  # add cutoff line
 text(x=1:length(cooksd)+1, y=cooksd+0.001, labels=ifelse(cooksd>4*mean(cooksd, na.rm=T),names(cooksd),""), col="red")
 ```
 
-```{r}
+```{r, fig.show='hold',out.width="80%"}
 # Get rid off the outliers
 influential = which(cooksd>4*mean(cooksd, na.rm=T))  # influential points
 area_posit[influential, ]   #all data for influential points
@@ -130,34 +65,7 @@ kable(table1)
 ```{r}
 new_dat <- rbind(fire[which(fire$area==0),], dat)   #join the area_positive w/o influential points to the data w/ area=0
 new_dat$burn <- ifelse(new_dat$area==0,0,1)  #to get the new dataset without the influential points
-new_dat
+head(new_dat)
 md.pattern(new_dat)
 ```
-
-### Logistic Regression
-```{r}
-# Fit Logistic Regression
-lg_burn <- glm(burn ~ X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain, family=binomial(),data=new_dat)
-summary(lg_burn)
-lg_burn2 <- glm(burn ~X+Y+month+day+FFMC+DMC+DC+ISI+temp+I(temp^2)+RH+wind+rain, family=binomial(), data=new_dat)
-summary(lg_burn2)
-
-hoslem.test(new_dat$burn, fitted(lg_burn), g=10)  #not a poor fit (small P-value, poor fit, H0:good fit)
-hoslem.test(new_dat$burn, fitted(lg_burn2), g=10) #not a poor fit
-
-gof(lg_burn)  #AUC=64.0%
-gof(lg_burn2) #AUC=64.7%
-```
-
-
-
-
-
-
-
-
-
-
-
-
 

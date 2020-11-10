@@ -1,4 +1,7 @@
-# BST260_group_project
+---
+title: "Introduction"
+---
+
 ## Topic: Forest Fires in the northeast region of Portugal
 ## Group member: Qi Hua, Yichen Huang
 
