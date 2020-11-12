@@ -20,6 +20,8 @@ library(caret)
 library(leaps)
 library(MASS)
 library(glmnet)
+library(splines)
+library(splines2)
 ```
 
 ## Forest Fire
@@ -46,7 +48,7 @@ for (i in 1:517){
     fire$season.cat[i] <- 3
   }
 }
-fire
+summary(fire)
 ```
 
 
@@ -63,53 +65,68 @@ ggplot(data=fire, aes(x=logarea))+
 
 
 
+#### Outliers
+```{r}
+# Outliers / Cook's Distance
+ols_plot_cooksd_bar(mod_lin)  #number 262 datapoint in this data set, which is id=500
+ols_plot_resid_lev(mod_lin)
+ols_plot_dffits(mod_lin)
+
+cooksd <- cooks.distance(mod_lin)
+plot(cooksd, pch="*", cex=2, main="Influential Obs by Cooks distance")  # plot cook's distance
+abline(h = 4*mean(cooksd, na.rm=T), col="red")  # add cutoff line
+text(x=1:length(cooksd)+1, y=cooksd+0.001, labels=ifelse(cooksd>4*mean(cooksd, na.rm=T),names(cooksd),""), col="red")
+
+# Get rid off the outliers
+influential = which(cooksd>4*mean(cooksd, na.rm=T))  # influential points
+influ <- area_posit[influential, ]   #all data for influential points
+influ
+dat <- area_posit[-influential,]  #get rid off the influential points
+head(dat)
+```
+
 
 
 
 #### Linear Regression Analysis
 ```{r}
+# Scatterplot with lowess curve
+ggplot(data=area_posit, aes(x=DMC, y=logarea))+
+  geom_point()+
+  geom_smooth(method = "loess",se=FALSE)+
+  theme_bw()
+
+
 # Fit linear regression model to area>0 since this is normally distributed
 area_posit <- fire[which(fire$area>0),]
 summary(area_posit)
 area_posit
 
-mod_lin <- lm(logarea ~X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain+as.factor(season.cat), data=area_posit[c(seq(1,12),15,16)])
+mod_lin <- lm(logarea ~X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain, data=area_posit[c(seq(1,12),15,16)])
 summary(mod_lin)  # DMC and DC are being statistically significant 
-
-# Outliers
-ols_plot_cooksd_chart(mod_lin)  #number 262 datapoint in this data set, which is id=500
-ols_plot_resid_lev(mod_lin)
-
-```
-
-
-`
-```{r}
-cooksd <- cooks.distance(mod_lin)
-plot(cooksd, pch="*", cex=2, main="Influential Obs by Cooks distance")  # plot cook's distance
-abline(h = 4*mean(cooksd, na.rm=T), col="red")  # add cutoff line
-text(x=1:length(cooksd)+1, y=cooksd+0.001, labels=ifelse(cooksd>4*mean(cooksd, na.rm=T),names(cooksd),""), col="red")
-```
-
-```{r}
-# Get rid off the outliers
-influential = which(cooksd>4*mean(cooksd, na.rm=T))  # influential points
-area_posit[influential, ]   #all data for influential points
-dat <- area_posit[-influential,]  #get rid off the influential points
-dat
+tidy(mod_lin)
 
 #Fit linear regression again, now without the influential points and outliers
-mod_lin2 <- lm(logarea ~ ., data=dat[c(seq(1,12),15,16)])
+mod_lin2 <- lm(logarea ~X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain, data=dat)
 summary(mod_lin2)
 
 plot(mod_lin2, which=c(1,2,3))
+```
 
+
+
+
+```{r}
 # Linear model with forward selection & backward elimination based on AIC
 full.model <- lm(logarea ~., data = dat[c(seq(1,12),15,16)])
 step.forw <- step(lm(logarea~1, data=dat[c(seq(1,12),15,16)]), ~X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain, direction = "forward")
 step.back <- step(full.model, direction = "backward")
 summary(step.forw)
 summary(step.back)
+
+plot(step.back, 1:3)
+
+
 
 table1<- matrix(c(summary(mod_lin)$r.squared, summary(mod_lin)$adj.r.squared, sqrt(mean(mod_lin$residuals^2)),AIC(mod_lin), BIC(mod_lin),
                   summary(mod_lin2)$r.squared, summary(mod_lin2)$adj.r.squared, sqrt(mean(mod_lin2$residuals^2)),AIC(mod_lin2), BIC(mod_lin2),
@@ -124,6 +141,21 @@ table1 <- as.table(table1)
 kable(table1)
 ```
 
+```{r}
+table10<- matrix(c(summary(mod_lin2)$r.squared, summary(mod_lin2)$adj.r.squared, sqrt(mean(mod_lin2$residuals^2)),AIC(mod_lin2), BIC(mod_lin2),
+                  summary(step.forw)$r.squared, summary(step.forw)$adj.r.squared, sqrt(mean(step.forw$residuals^2)),AIC(step.forw), BIC(step.forw),
+                  summary(step.back)$r.squared, summary(step.back)$adj.r.squared, sqrt(mean(step.back$residuals^2)),AIC(step.back), BIC(step.back)), ncol=5,nrow=3, byrow=TRUE)
+colnames(table10)<- c("R^2", "Adjusted R^2", "Square root of MSE","AIC", "BIC")
+rownames(table10)<- c("logarea~., (w/o influential points)",
+                     "model with forward selection based on AIC",
+                     "model with backward elimination based on AIC")
+table1 <- as.table(table10)
+kable(table10)
+```
+```
+
+
+
 
 
 ### New complete dataset
@@ -131,7 +163,7 @@ kable(table1)
 new_dat <- rbind(fire[which(fire$area==0),], dat)   #join the area_positive w/o influential points to the data w/ area=0
 new_dat$burn <- ifelse(new_dat$area==0,0,1)  #to get the new dataset without the influential points
 new_dat
-md.pattern(new_dat)
+md.pattern(new_dat)  #no missing value
 ```
 
 ### Logistic Regression
@@ -139,15 +171,16 @@ md.pattern(new_dat)
 # Fit Logistic Regression
 lg_burn <- glm(burn ~ X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain, family=binomial(),data=new_dat)
 summary(lg_burn)
-lg_burn2 <- glm(burn ~X+Y+month+day+FFMC+DMC+DC+ISI+temp+I(temp^2)+RH+wind+rain, family=binomial(), data=new_dat)
+lg_burn2 <- glm(burn ~X+Y+month+day+FFMC+I(FFMC^2)+DMC+I(DMC^2)+DC+I(DC^2)+ISI+temp+I(temp^2)+RH+wind+rain+I(rain^2), family=binomial(), data=new_dat)
 summary(lg_burn2)
 
 hoslem.test(new_dat$burn, fitted(lg_burn), g=10)  #not a poor fit (small P-value, poor fit, H0:good fit)
 hoslem.test(new_dat$burn, fitted(lg_burn2), g=10) #not a poor fit
 
 gof(lg_burn)  #AUC=64.0%
-gof(lg_burn2) #AUC=64.7%
+gof(lg_burn2) #AUC=66.4%
 ```
+
 
 
 
