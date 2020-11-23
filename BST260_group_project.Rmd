@@ -22,6 +22,7 @@ library(MASS)
 library(glmnet)
 library(splines)
 library(splines2)
+library(GGally)
 ```
 
 ## Forest Fire
@@ -116,6 +117,7 @@ plot(mod_lin2, which=c(1,2,3))
 
 
 
+
 ```{r}
 # Linear model with forward selection & backward elimination based on AIC
 full.model <- lm(logarea ~., data = dat[c(seq(1,12),15,16)])
@@ -142,18 +144,23 @@ kable(table1)
 ```
 
 ```{r}
-table10<- matrix(c(summary(mod_lin2)$r.squared, summary(mod_lin2)$adj.r.squared, sqrt(mean(mod_lin2$residuals^2)),AIC(mod_lin2), BIC(mod_lin2),
-                  summary(step.forw)$r.squared, summary(step.forw)$adj.r.squared, sqrt(mean(step.forw$residuals^2)),AIC(step.forw), BIC(step.forw),
-                  summary(step.back)$r.squared, summary(step.back)$adj.r.squared, sqrt(mean(step.back$residuals^2)),AIC(step.back), BIC(step.back)), ncol=5,nrow=3, byrow=TRUE)
+table10<- matrix(c(round(summary(mod_lin2)$r.squared,5), round(summary(mod_lin2)$adj.r.squared,5), round(sqrt(mean(mod_lin2$residuals^2)),5),round(AIC(mod_lin2),5), round(BIC(mod_lin2),5),
+                  round(summary(step.forw)$r.squared,5), round(summary(step.forw)$adj.r.squared,5), round(sqrt(mean(step.forw$residuals^2)),5),round(AIC(step.forw),5), round(BIC(step.forw),5),
+                  round(summary(step.back)$r.squared,5), round(summary(step.back)$adj.r.squared,5), round(sqrt(mean(step.back$residuals^2)),5),round(AIC(step.back),5), round(BIC(step.back),5),
+                  "/", "/", "/",round(AIC(mod.gam),5), round(BIC(mod.gam),5)), ncol=5,nrow=4, byrow=TRUE)
 colnames(table10)<- c("R^2", "Adjusted R^2", "Square root of MSE","AIC", "BIC")
 rownames(table10)<- c("logarea~., (w/o influential points)",
                      "model with forward selection based on AIC",
-                     "model with backward elimination based on AIC")
-table1 <- as.table(table10)
+                     "model with backward elimination based on AIC",
+                     "model fitted with gamma distribution")
+table10 <- as.table(table10)
 kable(table10)
 ```
-```
 
+```{r}
+ggplot(data=dat, aes(x=area))+
+  geom_density(kernel="gaussian")
+```
 
 
 
@@ -164,14 +171,19 @@ new_dat <- rbind(fire[which(fire$area==0),], dat)   #join the area_positive w/o 
 new_dat$burn <- ifelse(new_dat$area==0,0,1)  #to get the new dataset without the influential points
 new_dat
 md.pattern(new_dat)  #no missing value
+summary(new_dat)
 ```
+
+
+
+
 
 ### Logistic Regression
 ```{r}
 # Fit Logistic Regression
-lg_burn <- glm(burn ~ X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain, family=binomial(),data=new_dat)
+lg_burn <- glm(burn ~ X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain, family=binomial(link = "logit"),data=new_dat)
 summary(lg_burn)
-lg_burn2 <- glm(burn ~X+Y+month+day+FFMC+I(FFMC^2)+DMC+I(DMC^2)+DC+I(DC^2)+ISI+temp+I(temp^2)+RH+wind+rain+I(rain^2), family=binomial(), data=new_dat)
+lg_burn2 <- glm(burn ~X+Y+month+day+FFMC+I(FFMC^2)+DMC+I(DMC^2)+DC+I(DC^2)+ISI+temp+I(temp^2)+RH+wind+rain+I(rain^2), family=binomial(link = "logit"), data=new_dat)
 summary(lg_burn2)
 
 hoslem.test(new_dat$burn, fitted(lg_burn), g=10)  #not a poor fit (small P-value, poor fit, H0:good fit)
@@ -179,7 +191,132 @@ hoslem.test(new_dat$burn, fitted(lg_burn2), g=10) #not a poor fit
 
 gof(lg_burn)  #AUC=64.0%
 gof(lg_burn2) #AUC=66.4%
+
+anova(lg_burn, lg_burn2, test="Chisq")
 ```
+
+
+```{r}
+table3<- matrix(c(AIC(lg_burn), BIC(lg_burn),
+                  AIC(lg_burn2), BIC(lg_burn2)), ncol=2,nrow=2, byrow=TRUE)
+colnames(table3)<- c("AIC", "BIC")
+rownames(table3)<- c("logistic model #1",
+                     "logistic model #2")
+table1 <- as.table(table3)
+kable(table3)
+```
+
+
+
+### Gamma Regression for skewed positive distribution 
+```{r}
+ggplot(data=new_dat, aes(x=log(area+1)))+
+  geom_histogram(aes(y=..density..), col="black",fill="white")
+
+new_dat$area_1 <- new_dat$area+1
+
+mod.gam <- glm(area_1~X+Y+month+day+FFMC+DMC+DC+ISI+temp+RH+wind+rain, data=new_dat, family = Gamma(link = "log"))
+summary(mod.gam)
+test <- gamma.shape(mod.gam, verbose=TRUE)
+test
+1-pchisq(sum(resid(mod.gam, type="pearson")^2),3.341313)
+goft::gamma_test(mod.gam$fitted.values)
+```
+
+### Machine Learning
+```{r}
+y <- new_dat$burn
+set.seed(1)
+train_index <- createDataPartition(y, times = 1, p = 0.5, list = FALSE)
+train_set <- new_dat[train_index, ]
+test_set <- new_dat[-train_index, ]
+
+#Logistic Machine Learning
+logistic_fit <- glm(burn~X+Y+FFMC+DMC+DC+ISI+temp+RH+wind+rain, train_set, family=binomial(link = "logit"))
+p_hat_logit <- predict(logistic_fit, newdata=test_set)
+y_hat_logit <- ifelse(p_hat_logit>0.5, 1,0)
+confusionMatrix(data=as.factor(y_hat_logit), reference = as.factor(test_set$burn))  #0.528
+
+#knn
+f_hat <- predict(logistic_fit, newdata=test_set, type="response")
+tab <- table(pred=round(f_hat), truth=test_set$burn)
+confusionMatrix(tab)$tab
+confusionMatrix(tab)$overall["Accuracy"]
+knn_fit <- knn3(burn~X+Y+FFMC+DMC+DC+ISI+temp+RH+wind+rain, data=train_set,k=7)
+f_hat < predict(knn_fit, newdata=test_set)[,2]
+tab <- table(pred=round(f_hat), truth=test_set$burn)
+confusionMatrix(tab)$tab
+confusionMatrix(tab)$overall["Accuracy"]
+
+control <- trainControl(method="cv", number=2,p=0.5)
+dat2 <- mutate(new_dat, burn=as.factor(burn)) 
+res <- train(burn~ X+Y+FFMC+DMC+DC+ISI+temp+RH+wind+rain, data=dat2, method="knn", trControl=control,
+             tuneLength=1, tuneGrid=data.frame(k=seq(1,152,2)), metric="Accuracy")
+plot(res)
+
+
+# Gamma
+library(e1071)
+ols_fit <- lm(area~ X+Y+FFMC+DMC+DC+ISI+temp+RH+wind+rain, train_set[train_set$area>0,])
+gamma_fit <- glm(area_1~X+Y+FFMC+DMC+DC+ISI+temp+RH+wind+rain, train_set,family = Gamma(link = 'log'))
+
+#nb_fit   <- naiveBayes(area_1~X+Y+FFMC+DMC+DC+ISI+temp+RH+wind+rain, data = train_set)
+#y_hat_nb <- predict(nb_fit, test_set)
+#confusionMatrix(factor(y_hat_nb, levels=1:148), factor(test_set$area_1, levels=1:148))
+
+
+
+```
+
+```{r}
+library(data.table)
+phat <- predict(logistic_fit, test_set, type="response")
+pred <- as.data.frame(test_set[,'burn'], colname='burn')
+colnames(pred)[1] <- "burn"
+pred$ols <- phat*predict(ols_fit, test_set)
+pred$gamma <- phat* predict(gamma_fit, test_set, type="response")
+
+#Simulation
+n <- nrow(test_set)
+d <- rbind(n, 1, phat)
+y.norm <- d*rnorm(n, pred$ols, summary(ols_fit)$sigma)
+
+gamma.shape(gamma_fit, verbose=TRUE)  #a=0.59031959
+y.gamma <- d* rgamma(n, shape=0.59031959, rate=0.04409466)
+y <- pred$burn
+p.dat <- data.table(y=c(y, y.norm, y.gamma), 
+                    lab=c(rep("Observed",n), rep("Normal",n), rep("Gamma",n)))
+p <- ggplot(p.dat[y>00 & y<400], aes(x=y, col=lab)) +
+  geom_density(kernel="gaussian")+
+  xlab("area")+ylab("Density")+
+  theme(legend.position = 'bottom')+labs(col="")+
+  scale_color_manual(values = c(Observed="black", Normal="red", Gamma="blue"))
+print(p)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
