@@ -226,23 +226,23 @@ goft::gamma_test(mod.gam$fitted.values)
 ### Machine Learning
 ```{r}
 y <- new_dat$burn
-set.seed(1)
+set.seed(1971)
 train_index <- createDataPartition(y, times = 1, p = 0.5, list = FALSE)
 train_set <- new_dat[train_index, ]
 test_set <- new_dat[-train_index, ]
 
 #Logistic Machine Learning
-logistic_fit <- glm(burn~X+Y+FFMC+DMC+DC+ISI+temp+RH+wind+rain, train_set, family=binomial(link = "logit"))
+logistic_fit <- glm(burn~X+Y+FFMC+I(FFMC^2)+DMC+I(DMC^2)+DC+I(DC^2)+ISI+temp+I(temp^2)+RH+wind+rain+I(rain^2), train_set, family=binomial(link = "logit"))
 p_hat_logit <- predict(logistic_fit, newdata=test_set)
 y_hat_logit <- ifelse(p_hat_logit>0.5, 1,0)
-confusionMatrix(data=as.factor(y_hat_logit), reference = as.factor(test_set$burn))  #0.528
+confusionMatrix(data=as.factor(y_hat_logit), reference = as.factor(test_set$burn))
 
 #knn
 f_hat <- predict(logistic_fit, newdata=test_set, type="response")
 tab <- table(pred=round(f_hat), truth=test_set$burn)
 confusionMatrix(tab)$tab
 confusionMatrix(tab)$overall["Accuracy"]
-knn_fit <- knn3(burn~X+Y+FFMC+DMC+DC+ISI+temp+RH+wind+rain, data=train_set,k=7)
+knn_fit <- knn3(burn~X+Y+FFMC+I(FFMC^2)+DMC+I(DMC^2)+DC+I(DC^2)+ISI+temp+I(temp^2)+RH+wind+rain+I(rain^2), data=train_set,k=19)
 f_hat < predict(knn_fit, newdata=test_set)[,2]
 tab <- table(pred=round(f_hat), truth=test_set$burn)
 confusionMatrix(tab)$tab
@@ -250,8 +250,9 @@ confusionMatrix(tab)$overall["Accuracy"]
 
 control <- trainControl(method="cv", number=2,p=0.5)
 dat2 <- mutate(new_dat, burn=as.factor(burn)) 
-res <- train(burn~ X+Y+FFMC+DMC+DC+ISI+temp+RH+wind+rain, data=dat2, method="knn", trControl=control,
-             tuneLength=1, tuneGrid=data.frame(k=seq(1,152,2)), metric="Accuracy")
+res <- train(burn~ X+Y+FFMC+I(FFMC^2)+DMC+I(DMC^2)+DC+I(DC^2)+ISI+temp+I(temp^2)+RH+wind+rain+I(rain^2), data=dat2, method="knn", trControl=control,
+             tuneLength=1, tuneGrid=data.frame(k=seq(1,100,2)), metric="Accuracy")
+
 plot(res)
 
 
@@ -281,8 +282,8 @@ n <- nrow(test_set)
 d <- rbind(n, 1, phat)
 y.norm <- d*rnorm(n, pred$ols, summary(ols_fit)$sigma)
 
-gamma.shape(gamma_fit, verbose=TRUE)  #a=0.59031959
-y.gamma <- d* rgamma(n, shape=0.59031959, rate=0.04409466)
+gamma.shape(gamma_fit, verbose=TRUE)  #a=0.59288122
+y.gamma <- d* rgamma(n, shape=0.59288122, rate=0.03498864)
 y <- pred$burn
 p.dat <- data.table(y=c(y, y.norm, y.gamma), 
                     lab=c(rep("Observed",n), rep("Normal",n), rep("Gamma",n)))
