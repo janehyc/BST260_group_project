@@ -157,10 +157,6 @@ table10 <- as.table(table10)
 kable(table10)
 ```
 
-```{r}
-ggplot(data=dat, aes(x=area))+
-  geom_density(kernel="gaussian")
-```
 
 
 
@@ -226,48 +222,107 @@ goft::gamma_test(mod.gam$fitted.values)
 ### Machine Learning
 ```{r}
 y <- new_dat$burn
-set.seed(1971)
+set.seed(1)
 train_index <- createDataPartition(y, times = 1, p = 0.5, list = FALSE)
 train_set <- new_dat[train_index, ]
 test_set <- new_dat[-train_index, ]
 
 #Logistic Machine Learning
-logistic_fit <- glm(burn~X+Y+FFMC+I(FFMC^2)+DMC+I(DMC^2)+DC+I(DC^2)+ISI+temp+I(temp^2)+RH+wind+rain+I(rain^2), train_set, family=binomial(link = "logit"))
+logistic_fit <- glm(burn~X+Y+month+day+FFMC+I(FFMC^2)+DMC+I(DMC^2)+DC+I(DC^2)+ISI+temp+I(temp^2)+RH+wind+rain+I(rain^2), train_set, family=binomial(link = "logit"))
 p_hat_logit <- predict(logistic_fit, newdata=test_set)
 y_hat_logit <- ifelse(p_hat_logit>0.5, 1,0)
 confusionMatrix(data=as.factor(y_hat_logit), reference = as.factor(test_set$burn))
 
-#knn
-f_hat <- predict(logistic_fit, newdata=test_set, type="response")
-tab <- table(pred=round(f_hat), truth=test_set$burn)
-confusionMatrix(tab)$tab
-confusionMatrix(tab)$overall["Accuracy"]
-knn_fit <- knn3(burn~X+Y+FFMC+I(FFMC^2)+DMC+I(DMC^2)+DC+I(DC^2)+ISI+temp+I(temp^2)+RH+wind+rain+I(rain^2), data=train_set,k=19)
-f_hat < predict(knn_fit, newdata=test_set)[,2]
-tab <- table(pred=round(f_hat), truth=test_set$burn)
-confusionMatrix(tab)$tab
-confusionMatrix(tab)$overall["Accuracy"]
-
-control <- trainControl(method="cv", number=2,p=0.5)
-dat2 <- mutate(new_dat, burn=as.factor(burn)) 
-res <- train(burn~ X+Y+FFMC+I(FFMC^2)+DMC+I(DMC^2)+DC+I(DC^2)+ISI+temp+I(temp^2)+RH+wind+rain+I(rain^2), data=dat2, method="knn", trControl=control,
-             tuneLength=1, tuneGrid=data.frame(k=seq(1,100,2)), metric="Accuracy")
-
-plot(res)
-
-
-# Gamma
-library(e1071)
-ols_fit <- lm(area~ X+Y+FFMC+DMC+DC+ISI+temp+RH+wind+rain, train_set[train_set$area>0,])
-gamma_fit <- glm(area_1~X+Y+FFMC+DMC+DC+ISI+temp+RH+wind+rain, train_set,family = Gamma(link = 'log'))
-
-#nb_fit   <- naiveBayes(area_1~X+Y+FFMC+DMC+DC+ISI+temp+RH+wind+rain, data = train_set)
-#y_hat_nb <- predict(nb_fit, test_set)
-#confusionMatrix(factor(y_hat_nb, levels=1:148), factor(test_set$area_1, levels=1:148))
-
-
-
 ```
+
+
+
+
+### QDA & LDA
+```{r}
+set.seed(1)
+
+qda_fit <- qda(burn ~ X+Y+FFMC+DMC+DC+ISI+temp+RH+wind, data = train_set)
+qda_preds <- predict(qda_fit, test_set)
+confusionMatrix(data=as.factor(qda_preds$class), reference = as.factor(test_set$burn))
+
+
+lda_fit <- lda(burn ~ X+Y+month+day+FFMC+I(FFMC^2)+DMC+I(DMC^2)+DC+I(DC^2)+ISI+temp+I(temp^2)+RH+wind+rain+I(rain^2), data = train_set)
+lda_preds <- predict(lda_fit, test_set)
+confusionMatrix(data = as.factor(lda_preds$class), reference = as.factor(test_set$burn))
+```
+
+```{r}
+library(ROCR)
+p1 <- prediction(p_hat_logit, test_set$burn) %>% performance(measure = "tpr", x.measure="tnr")
+p2 <- prediction(qda_preds$posterior[,2], test_set$burn) %>% performance(measure = "tpr", x.measure="tnr")
+p3 <- prediction(lda_preds$posterior[,2], test_set$burn) %>% performance(measure = "tpr", x.measure="tnr")
+
+par(mfrow=c(1, 2))
+p2 %>% plot(main="QDA ROC")
+p3 %>% plot(main="LDA ROC")
+
+plot(p1, col="red",xlim=c(1,0))
+plot(p2, add=TRUE, col="blue")
+plot(p3, add=TRUE, col="green")
+
+# Logistic regression AUC
+prediction(p_hat_logit, test_set$burn) %>%
+  performance(measure = "auc") %>%
+  .@y.values   #0.545
+
+
+# QDA AUC
+prediction(qda_preds$posterior[,2], test_set$burn) %>%
+  performance(measure = "auc") %>%
+  .@y.values   #0.510
+
+# LDA AUC
+prediction(lda_preds$posterior[,2], test_set$burn) %>%
+  performance(measure = "auc") %>%
+  .@y.values  #0.541
+```
+
+
+
+
+## Classification tree, Random Forest
+```{r}
+library(tree)
+library(randomForest)
+set.seed(1)
+# Classification Tree
+train_index <- createDataPartition(y, times = 1, p = 0.5, list = FALSE)
+train_set <- new_dat[train_index, ]
+test_set <- new_dat[-train_index, ]
+train_set$burn <- as.factor(train_set$burn)
+test_set$burn <- as.factor(test_set$burn)
+
+tree_fit <- tree(burn ~X+Y+FFMC+DMC+DC+ISI+temp+RH+wind, data=train_set)
+summary(tree_fit)
+pred <- predict(tree_fit, test_set,type = "class")
+confusionMatrix(as.factor(pred), reference = test_set$burn)
+
+# Random Forest
+rf <- randomForest(burn~X+Y+FFMC+DMC+DC+ISI+temp+RH+wind, data = train_set)
+preds_rf <- predict(rf, test_set)
+confusionMatrix(as.factor(preds_rf), reference = test_set$burn)
+
+# Knn
+knn_fit <- knn3(burn~X+Y+FFMC+DMC+DC+ISI+temp+RH+wind, data = train_set,k=5)
+knn_hat <- predict(knn_fit, test_set, type = "class")
+tab <- table(pred=knn_hat, truth=test_set$burn)
+confusionMatrix(tab)
+
+#control <- trainControl(method="cv", number=2,p=0.5)
+#dat2 <- mutate(new_dat, burn=as.factor(burn)) 
+#res <- train(burn~ X+Y+FFMC+DMC+DC+ISI+temp+RH+wind, data=dat2, method="knn", trControl=control, tuneLength=1, tuneGrid=data.frame(k=seq(1,100,2)), metric="Accuracy")
+#plot(res)
+```
+
+
+
+
 
 ```{r}
 library(data.table)
@@ -294,18 +349,6 @@ p <- ggplot(p.dat[y>00 & y<400], aes(x=y, col=lab)) +
   scale_color_manual(values = c(Observed="black", Normal="red", Gamma="blue"))
 print(p)
 ```
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
