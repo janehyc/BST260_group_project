@@ -1,0 +1,12 @@
+name: Visualization
+title: Visualization
+username:
+account: hq0411
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3214522
+bundleId: 3924551
+url: https://hq0411.shinyapps.io/Visualization/
+when: 1606769572.57899
+asMultiple: FALSE
+asStatic: FALSE

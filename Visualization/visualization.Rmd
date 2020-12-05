@@ -1,0 +1,97 @@
+```{r}
+library(tidyverse)
+library(ggthemr)
+library(egg)
+library(ggpubr)
+
+forestfire<-read.csv("forestfires.csv")
+```
+
+### histogram
+```{r} 
+ggthemr("dust")
+temp_h <- forestfire %>%
+  ggplot(aes(temp))+
+  geom_histogram(binwidth = 2)+
+  scale_y_continuous(limits = c(0,100))+
+  xlab(label = "Temperature (°C)")+
+  ylab(label = "Count")
+
+wind_h <- forestfire %>%
+  ggplot(aes(wind))+
+  geom_histogram(binwidth = 0.75)+
+  scale_y_continuous(limits = c(0,100))+
+  xlab(label = "Wind (km/h)")+
+  ylab(label = "Count")
+
+RH_h <- forestfire %>%
+    ggplot(aes(RH))+
+    geom_histogram(binwidth = 5)+
+    scale_y_continuous(limits = c(0,100))+
+    xlab(label = "Relative humidity (%)")+
+    ylab(label = "Count")
+
+rain_h <- forestfire %>%
+    ggplot(aes(rain))+
+    geom_histogram()+
+    scale_y_continuous()+
+    xlab(label = "Rain (mm/m^2)")+
+    ylab(label = "Count")
+   
+day_h <- forestfire %>%
+    mutate(day = factor(day,levels = c("mon","tue","wed","thu","fri","sat","sun")))%>%
+    ggplot(aes(day))+
+    geom_histogram(stat = "count")+
+    xlab(label = "Day")+
+    ylab(label = "Count")
+
+ggarrange(temp_h,wind_h,RH_h,rain_h,day_h,nrow=1,ncol=5,
+          widths = c(4,4,4,4,4), heights = c(4,4,4,4,4))%>%
+  annotate_figure(top = text_grob("Count of forest fires",color = "black", face = "bold", size = 14))
+```
+
+### scatter plot
+```{r}
+temp_s <- forestfire %>%
+    filter(area!=0)%>%
+    ggplot(aes(temp, area))+
+    geom_point()+
+    xlab(label = "Temperature (°C)")+
+    ylab(label = "Area (Ha)")
+  
+RH_s <- forestfire %>%
+    filter(area!=0)%>%
+    ggplot(aes(RH, area))+
+    geom_point()+
+    xlab(label = "Relative humidity (%)")+
+    ylab(label = "Area (Ha)")
+  
+wind_s <- forestfire %>%
+    filter(area!=0)%>%
+    ggplot(aes(wind, area))+
+    geom_point()+
+    xlab(label = "Wind (km/h)")+
+    ylab(label = "Area (Ha)")
+  
+rain_s <- forestfire %>%
+    filter(area!=0)%>%
+    ggplot(aes(rain, area))+
+    geom_point()+
+    scale_y_continuous()+
+    xlab(label = "Rain (mm/m^2)")+
+    ylab(label = "Area (Ha)")
+  
+day_s <- forestfire %>%
+    filter(area!=0)%>%
+    mutate(day = factor(day,levels = c("mon","tue","wed","thu","fri","sat","sun")))%>%
+    ggplot(aes(day, area))+
+    geom_point()+
+    xlab(label = "Day")+
+     ylab(label = "Area (Ha)")
+
+  
+  ggarrange(temp_s,wind_s,RH_s,rain_s,day_s,
+            nrow = 1,ncol = 5,
+            widths = c(4,4,4,4,4), heights = c(4,4,4,4,4))%>%
+    annotate_figure(top = text_grob("Area of forest fires",color = "black", face = "bold", size = 14))
+```
