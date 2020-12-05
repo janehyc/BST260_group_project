@@ -282,6 +282,8 @@ gof(lg_burn2) #AUC=66.4%
 anova(lg_burn, lg_burn2, test="Chisq")
 ```
 
+
+
 From the coefficients of the variables, we can see that there're more variables close to the significance level (P-value=0.05) and much closer than those in #1. In this logistic regression model, DMC and temperature seem to be the influential and significant predictors. 
 
 We also used Hosmer and Lemeshow goodness of fit (GOF) test again for the new logistic regression model. Since the P-value=0.8867 > 0.05, fwe ail to reject the null hypothesis that this is a good fit. This time, the p-value is larger than the first model. Again, from the Hosmer and Lemeshow GOF test, the #2 logistic model also seems to be a good fit. Look at the ROC curve and AUC, now AUC=64.7%, larger than the first model. And we know that larger the AUC, the better the model fit. Thus, after adjusting for these variables, the model seems to have a better fit. 
@@ -308,6 +310,8 @@ Finally, we decided to predict the occurrence of forest fire using machine learn
 
 Since we would like to predict a binary outcome, i.e. whether there would be forest fire or not, we used classification models including logistic machine learning model, linear discriminant analysis (LDA), quadratic discriminant analysis (QDA), k-nearest neighbors (knn), classification tree, and random forest. In the modeling process, we divided the dataset in half for training and testing sets. 
 
+
+##### Logistic Machine Learning
 ```{r}
 y <- new_dat$burn
 set.seed(1)
@@ -323,12 +327,10 @@ confusionMatrix(data=as.factor(y_hat_logit), reference = as.factor(test_set$burn
 ```
 
 
-```{r,fig.width="60%", fig.show='hold'}
-# QDA & LDA
+#### QDA, LDA
+```{r,out.width="70%"}
 set.seed(1)
-train_index <- createDataPartition(y, times = 1, p = 0.5, list = FALSE)
-train_set <- new_dat[train_index, ]
-test_set <- new_dat[-train_index, ]
+
 qda_fit <- qda(burn ~ X+Y+FFMC+DMC+DC+ISI+temp+RH+wind, data = train_set)
 qda_preds <- predict(qda_fit, test_set)
 confusionMatrix(data=as.factor(qda_preds$class), reference = as.factor(test_set$burn))
@@ -361,7 +363,16 @@ prediction(qda_preds$posterior[,2], test_set$burn) %>%
 prediction(lda_preds$posterior[,2], test_set$burn) %>%
   performance(measure = "auc") %>%
   .@y.values  #0.541
+```
 
+
+#### Knn
+```{r,out.width="70%"}
+train_index <- createDataPartition(y, times = 1, p = 0.5, list = FALSE)
+train_set <- new_dat[train_index, ]
+test_set <- new_dat[-train_index, ]
+train_set$burn <- as.factor(train_set$burn)
+test_set$burn <- as.factor(test_set$burn)
 # Knn
 knn_fit <- knn3(burn~X+Y+FFMC+DMC+DC+ISI+temp+RH+wind, data = train_set,k=5)
 knn_hat <- predict(knn_fit, test_set, type = "class")
@@ -385,6 +396,7 @@ plot(performance(prediction(knn_prob, test_set$burn), "tpr", "tnr"),add=TRUE,col
 Among these four models, kNN with k=5 has the greatest accuracy and the most balanced sensitivity and specificity. It also has the highest AUC value. The logistic model has slightly lower values for these parameters but still pretty balanced. Therefore, we chose kNN and logistic model over the other two.
 
 
+#### Classification tree, Random Forest
 ```{r,out.width="60%", fig.show='hold'}
 ## Classification tree, Random Forest
 set.seed(1)
@@ -426,7 +438,8 @@ For the random forest model, the accuracy is 0.5317, which is slightly lower tha
 
 
 
-## Final Analysis: What did you learn about the data? How did you answer the questions? How can you justify your answers?
+## Final Analysis
+* What did you learn about the data? How did you answer the questions? How can you justify your answers?
 
 From the Shiny app and plots, forest fires are most common during August and September, and most frequently occur at temperature around 20 °C and relative humidity around 40%. The distribution for wind speed is more spread out. Since the frequency and burning area of forest fires does not vary significantly between during weekdays and weekends, human activity does not have a great impact on forest fires. 
 
