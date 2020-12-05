@@ -169,7 +169,7 @@ Below are the codes for linear, logistic regression models and machine learning 
   
 
 #### Linear Regression Models
-```{r, out.width="70%",fig.show='hold'}
+```{r, out.width="50%",fig.show='hold'}
 # Fit linear regression model to area>0 since this is normally distributed
 area_posit <- fire[which(fire$area>0),]
 summary(area_posit)
@@ -192,6 +192,8 @@ summary(mod_lin2)
 
 plot(mod_lin2, which=c(1,2,3))
 ```
+
+
 From the coefficients and P-values of this linear model fitting using the full dataset, we can see that DMC (p-value <0.001) and DC (p-value<0.05) are statistical significant.
 
 From the coefficients and P-values of this linear model fitted using the dataset without the potential influential points, we can see that DMC and DC are still statistically significant, and now we have another statistically significant variable,  'monthoct' (p-value <0.05).  Also, in this model, we have more variables with P-value close to 0.05.
