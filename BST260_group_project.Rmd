@@ -30,7 +30,6 @@ library(ROCR)
 library(tree)
 library(randomForest)
 library(pROC)
-library(ROCR)
 ```
 
 # Topic: Forest Fires in the Northeast Region of Portugal
@@ -299,8 +298,21 @@ table3<- matrix(c(AIC(lg_burn), BIC(lg_burn),
 colnames(table3)<- c("AIC", "BIC")
 rownames(table3)<- c("logistic model #1",
                      "logistic model #2")
-table1 <- as.table(table3)
+table3 <- as.table(table3)
 kable(table3)
+```
+
+
+Now, we have a linear regression model and a logistic regression model, the question is for these two models, which one is better? Hence, we compared the best linear with the best logistic via AIC, BIC, and we concluded that the logistic model had a better fit since it has a smaller AIC and BIC value seeing from below table, and the significant factors from the regression models are X, Y, FFMC, DMC, DC, ISI, temp, RH, wind that we can take them into further machine learning prediction. 
+
+```{r}
+table_ll<- matrix(c(AIC(step.back), BIC(step.back),
+                  AIC(lg_burn2), BIC(lg_burn2)), ncol=2,nrow=2, byrow=TRUE)
+colnames(table_ll)<- c("AIC", "BIC")
+rownames(table_ll)<- c("backward elimination linear model",
+                     "logistic model #2")
+table_ll <- as.table(table_ll)
+kable(table_ll)
 ```
 
 
