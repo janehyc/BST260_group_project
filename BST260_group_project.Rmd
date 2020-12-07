@@ -56,7 +56,7 @@ We were inspired by the forest fire data set from UCI machine learning repositor
 ## Initial Questions: 
 * What questions are you trying to answer? How did these questions evolve over the course of the project? What new questions did you consider in the course of your analysis?
 
-The first question we would like to answer is what are the influential factors in predicting forest fires.  Initially, we would like to use visualization to explore the data set, and then then use regression analysis to investigate significant variables. After learning shiny app, we decided to incorporate it into the visualization section to better illustrate the time-dependent distribution. As the course progressed, we were exposed to various modeling methods for machine learning and formed a more concrete idea about use modeling to predict forest fires.
+The first question we would like to answer is what are the influential factors in predicting forest fires. Initially, we would like to use visualization to explore the data set, and then then use regression analysis to investigate significant variables. After learning shiny app, we decided to incorporate it into the visualization section to better illustrate the time-dependent distribution. As the course progressed, we were exposed to various modeling methods for machine learning and formed a more concrete idea about use modeling to predict forest fires.
 
 
 
@@ -136,14 +136,14 @@ head(dat)
 ```
 
 
- We created a new data set excluding these points and wanted to see if fitting our regression models without these influential points helped improve our model fitting.
+ We created a new data set excluding these points and wanted to see if fitting our regression models without these influential points helped improve our model fitting and there're no missing values in our dataset. 
  
 ```{r}
 # New Dataset
 new_dat <- rbind(fire[which(fire$area==0),], dat)   #join the area_positive w/o influential points to the data w/ area=0
 new_dat$burn <- ifelse(new_dat$area==0,0,1)  #to get the new dataset without the influential points
 head(new_dat)
-md.pattern(new_dat)  #no missing value
+md.pattern(new_dat[,c(1:15,17)])  #no missing value
 summary(new_dat)
 ```
 
@@ -157,7 +157,8 @@ summary(new_dat)
 
 We used R shiny app to visualize our data, getting a rough idea of frequency, size, and distribution of forest fires. We were interested in weather observations that are associated with the FWI index: temperature, relative humidity, wind speed, and rain. For each of these variables, a plot is generated to describe its relationship with forest fires by month. To get a more direct interpretation, we also plotted the count and area of forest fires by variables of interest. The R shiny app is in the github repository and is also shown on google site. The following pictures are the screenshots of the shiny app.
 
-![visualization_1](visual1.png){width=50%} ![visualization_1](visual2.png){width=50%}
+![visualization_1](visual1.png){width=70%} 
+![visualization_1](visual2.png){width=70%}
 
 
 For statistical methods, we used linear regression model and logistic regression model based our data. Since our outcome in our data is burning area which is a continuous variable and is not a count, we considered linear regression model; then we categorize the outcome as a binary outcome -- burn = 1 if burning area>0, burn = 0 if burning area =0, logistic regression model is being used here. By comparing these regression models, we mainly looked at $R^2$, adjusted $R^2$, square root of MSE (mean squared error) for linear regression models, AUC, GOF (goodness-of-fit) test for logistic regression models and AIC and BIC for all. 
@@ -303,17 +304,8 @@ kable(table3)
 ```
 
 
-Now, we have a linear regression model and a logistic regression model, the question is for these two models, which one is better? Hence, we compared the best linear with the best logistic via AIC, BIC, and we concluded that the logistic model had a better fit since it has a smaller AIC and BIC value seeing from below table, and the significant factors from the regression models are X, Y, FFMC, DMC, DC, ISI, temp, RH, wind that we can take them into further machine learning prediction. 
+Now, we have a linear regression model and a logistic regression model, the question is for these two models, which one is better? Hence, we compared the best linear with the best logistic via AIC, BIC, and we concluded that the logistic model had a better fit since it has a smaller AIC and BIC value seeing from below table and plot, and the significant factors from the regression models are X, Y, FFMC, DMC, DC, ISI, temp, RH, wind that we can take them into further machine learning prediction. 
 
-```{r}
-table_ll<- matrix(c(AIC(step.back), BIC(step.back),
-                  AIC(lg_burn2), BIC(lg_burn2)), ncol=2,nrow=2, byrow=TRUE)
-colnames(table_ll)<- c("AIC", "BIC")
-rownames(table_ll)<- c("backward elimination linear model",
-                     "logistic model #2")
-table_ll <- as.table(table_ll)
-kable(table_ll)
-```
 
 
 
@@ -376,7 +368,7 @@ prediction(qda_preds$posterior[,2], test_set$burn) %>%
 # LDA AUC
 prediction(lda_preds$posterior[,2], test_set$burn) %>%
   performance(measure = "auc") %>%
-  .@y.values  #0.541
+  .@y.values  #0.501
 ```
 
 
@@ -399,7 +391,7 @@ prediction(knn_prob, test_set$burn) %>%
   performance(measure = "auc") %>%
   .@y.values  #0.607
 
-plot(p1, col="red",xlim=c(1.5,-0.5), main="Logistic, LDA, QDA, kNN ROC Plot")
+plot(p1, col="red",xlim=c(1.5,-0.5), main="Logistic(red), LDA(green), QDA(blue), kNN(pink) ROC Plot")
 plot(p2, add=TRUE, col="blue")
 plot(p3, add=TRUE, col="green")
 plot(performance(prediction(knn_prob, test_set$burn), "tpr", "tnr"),add=TRUE,col="hot pink")
@@ -411,7 +403,7 @@ Among these four models, kNN with k=5 has the greatest accuracy and the most bal
 
 
 #### Classification tree, Random Forest
-```{r,out.width="60%", fig.show='hold'}
+```{r,out.width="50%", fig.show='hold'}
 ## Classification tree, Random Forest
 set.seed(1)
 # Classification Tree
@@ -426,7 +418,7 @@ summary(tree_fit)
 pred <- predict(tree_fit, test_set,type = "class")
 confusionMatrix(as.factor(pred), reference = test_set$burn)
 
-plot(tree_fit, type = "uniform")
+plot(tree_fit, type = "uniform", main="Classification treee")
 text(tree_fit, cex = 1)
 
 cv_tree <- cv.tree(tree_fit)
@@ -434,7 +426,7 @@ plot(cv_tree)
 best.size <- cv_tree$size[which(cv_tree$dev==min(cv_tree$dev))] # which size is better?
 best.size
 prune_fit <- prune.tree(tree_fit, best = 4)
-plot(prune_fit, type="uniform")
+plot(prune_fit, type="uniform", main="Classification tree with best=4")
 text(prune_fit)
 
 # Random Forest
@@ -445,9 +437,11 @@ confusionMatrix(as.factor(preds_rf), reference = test_set$burn)
 
 varImpPlot(rf,main = "Random Forest Important Variable Plot")
 ```
-Using the cv.tree function, we determined the optimal number of terminal nodes to be 4. For this model, the accuracy is 0.504, while the sensitivity (0.1563) and specificity (0.8629) are extremely unbalanced. We would not consider it a good model to predict forest fires. 
 
-For the random forest model, the accuracy is 0.5317, which is slightly lower than the logistic model and kNN model. The sensitivity (0.4766) and specificity is relatively balanced (0.5887). Thus, this model is suitable for classifying the outcome of forest fire.
+
+Using the cv.tree function, we determined the optimal number of terminal nodes to be 4. Although from the plot, the size with the lowest deviance is 1 and 2, it's more reasonable to choose 4 with very slightly difference in deviance. For this model, the accuracy is 0.504, while the sensitivity (0.1563) and specificity (0.8629) are extremely unbalanced. We would not consider it a good model to predict forest fires. 
+
+For the random forest model, the accuracy is 0.5238, which is slightly lower than the logistic model and kNN model. The sensitivity (0.4375) and specificity is not quite balanced (0.6129), but compared with LDA and QDA models, it's being much more balanced. Thus, this model is also considered suitable for classifying the outcome of forest fire.
 
 
 
@@ -455,11 +449,11 @@ For the random forest model, the accuracy is 0.5317, which is slightly lower tha
 ## Final Analysis
 * What did you learn about the data? How did you answer the questions? How can you justify your answers?
 
-From the Shiny app and plots, forest fires are most common during August and September, and most frequently occur at temperature around 20 °C and relative humidity around 40%. The distribution for wind speed is more spread out. Since the frequency and burning area of forest fires does not vary significantly between during weekdays and weekends, human activity does not have a great impact on forest fires. 
+From the Shiny app and plots, forest fires are most common during August and September, and most frequently occur at temperature around 20°C and relative humidity around 40%. The distribution for wind speed is more spread out. Since the frequency and burning area of forest fires does not vary significantly between during weekdays and weekends, human activity does not have a great impact on forest fires. 
 
 Although the number of occurrence of forest fires are not linearly associated with weather observations, forest fires of large scale are more likely to occur under high temperature and low humidity.
 
-For regression analysis, from previous analysis, backward elimination based on AIC linear regression model is the best among linear regression models and second logistic model is the best among two logistic models. After comparing these two models, we concluded that the second logistic regression model is the best fitting one from the below table. 
+For regression analysis, from previous analysis, backward elimination based on AIC linear regression model is the best among linear regression models and second logistic model is the best among two logistic models. After comparing these two models, we concluded that the second logistic regression model is the best fitting one from the below table and plot. 
 ```{r}
 tablefinal<- matrix(c(AIC(step.back), BIC(step.back),
                   AIC(lg_burn2), BIC(lg_burn2)), ncol=2,nrow=2, byrow=TRUE)
@@ -469,9 +463,17 @@ rownames(tablefinal)<- c("linear #4: model with backward elimination based on AI
 tablefinal <- as.table(tablefinal)
 kable(tablefinal)
 ```
-By comparing the P-values, we ranked the most significant variables as following: X, Y, FFMC, DMC, DC, ISI, temp, RH, wind.
+![Linear vs Logistic](plot.png){width="60%"}
 
-For machine learning models, we considered kNN model, logistic model, and random forest model the best models to predict forest fires because they have the highest accuracy value and most balanced specificity and sensitivity.
+
+
+
+By comparing the P-values, we ranked the most significant variables as following: X, Y, FFMC, DMC, DC, ISI, temp, RH, wind. Using these factors, we performed machine learning to predict binary forest fire outcome. 
+
+For machine learning models, we considered kNN model, logistic model and random forest the best models to predict forest fires because they have the highest accuracy value and most balanced specificity and sensitivity.
+
+What's more, seeing the random forest most important variables plot, relative humidity (RH), temperature, Duff Moisture Code (DMC) and Drought Code (DC) are the top 4, which are in accordance with the results from visualization. So in the future, the fire department could take a closer look at these variable measurements and prepare accordingly.
+
 
 
 
