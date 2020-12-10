@@ -101,10 +101,10 @@ head(fire)
 
 Our dataset was good for analysis, no additional scraping was needed. Thus, for the cleanup, we were more focused on identifying any outliers or potential influential points that may affect our regression model fitting. 
 
-Since one regression model we were trying to fit is linear regression model which has an assumption of normality and our outcome burning area is not normally distributed, thus we did a log transformation on the burning areas above 0 to approximate normal distribution. Next, we identified ourliers and potential influential points in our dataset based on leverage and Cook's Distance.
+Since one regression model we were trying to fit is linear regression model which has an assumption of normality and our outcome burning area is not normally distributed seeing the below histogram on the left, thus we did a log transformation on the burning areas above 0 to approximate normal distribution. Next, we identified ourliers and potential influential points in our dataset based on leverage and Cook's Distance.
 
 
-```{r,out.width="60%",fig.show='hold'}
+```{r,out.width="50%",fig.show='hold'}
 # Area log transformation (for area>0)
 hist(fire$area,40, main = "Histogram of area", xlab = "Area")
 fire["logarea"] <- ifelse(fire$area >0, log(fire$area), NA)
@@ -112,6 +112,9 @@ ggplot(data=fire, aes(x=logarea))+
   geom_histogram(aes(y=..density..), col="black",fill="white")+
   stat_function(fun=dnorm, args = list(mean=mean(fire$logarea, na.rm = TRUE), sd = sd(fire$logarea, na.rm=TRUE)),col="red")
 ```
+
+
+We can see that after log transformation, the log(area) is almost distributed.
 
 
 ```{r,out.width="50%",fig.show='hold'}
@@ -132,9 +135,9 @@ influential = which(cooksd>4*mean(cooksd, na.rm=T))  # influential points
 influ <- area_posit[influential, ]   #all data for influential points
 influ
 dat <- area_posit[-influential,]  #get rid off the influential points
-head(dat)
 ```
 
+Seeing the potential influential points, id 500 has the maximum value of FFMC, high value of DMC that is above 3rd Quantile; id 470 has very small values of DC; id 267 has high value of ISI; id 239 has the maximum value of burning area with the given the parameters, etc. 
 
  We created a new data set excluding these points and wanted to see if fitting our regression models without these influential points helped improve our model fitting and there're no missing values in our dataset. 
  
@@ -213,9 +216,12 @@ table_12 <- as.table(table_12)
 kable(table_12)
 ```
 
-We compared these two models (#1 & #2) by values of R^2, adjusted R^2, square root of MSE, AIC and BIC. We would prefer higher value of R^2, adjusted R^2, and smaller values of square root of MSE, AIC and BIC. Here, the model fitted using dataset without the influential points have larger number of R^2, adjusted R^2, and smaller number of square root of MSE, AIC and BIC, indicating the 2nd model fits the data better. Therefore, in the further model fitting, we will use the dataset without influential points for better prediction. 
+We compared these two models (#1 & #2) by values of $R^2$, adjusted $R^2$, square root of MSE, AIC and BIC. $R^2$ is the proportion of the overall variability in our outcome that our model is able to explain; adjusted $R^2$ is a modified version of R2 that takes into account the number of predictors in our model; MSE is the estimated variance of the observed outcome about the fitted regression line—in other words, it estimates the amount variability in our outcome of interest that our model is unable to explain; AIC and BIC are model selection criteria.
+
+We would prefer higher value of $R^2$, adjusted $R^2$, and smaller values of square root of MSE, AIC and BIC. Here, the model fitted using dataset without the influential points have larger number of $R^2$, adjusted $R^2$, and smaller number of square root of MSE, AIC and BIC, indicating the 2nd model fits the data better. Therefore, in the further model fitting, we will use the dataset without influential points for better prediction. 
 
 Since we have a lot of variables to be considered, we also tried linear model with forward selection and backward elimination based on AIC value.
+
 ```{r, out.width="50%", fig.show='hold'}
 # Linear model with forward selection & backward elimination based on AIC
 full.model <- lm(logarea ~., data = dat[c(seq(1,12),15,16)])
@@ -225,17 +231,14 @@ summary(step.forw)
 summary(step.back)
 
 plot(step.back, 1:3)
-
-
-
-
 ```
 
 
-In the forward selection model, only the ISI predictor being selected, but with a not very statically significant P-value. 
-In the backward elimination model, more predictors are selected. Also, 'monthdec', 'monthoct', 'monthsep', DMC and DC are statically significant with p-values <0.05.
+In the forward selection model, only the ISI predictor being selected, but with a not very statically significant P-value.
 
-Finally, we compared these three fitted linear regression models on R^2, adjusted R^2, square root of MSE, AIC and BIC, to see which one performs the best. 
+In the backward elimination model, more predictors are selected. Also, 'monthdec', 'monthoct', 'monthsep', DMC and DC are statically significant with p-values <0.05. We also check the LINE assumption for the backward elimination model. From residuals vs fitted plot, linearity holds since the residuals scatter randomly above and below the zero overall; normality holds because the residuals do not deviate from the line in the normal Q-Q plot; equal variance holds because the residuals spread out evenly above and below the zero line in the residuals vs. fitted plot in general.
+
+Finally, we compared these three fitted linear regression models on $R^2$, adjusted $R^2$, square root of MSE, AIC and BIC, to see which one performs the best. 
 
 ```{r}
 table1<- matrix(c(summary(mod_lin)$r.squared, summary(mod_lin)$adj.r.squared, sqrt(mean(mod_lin$residuals^2)),AIC(mod_lin), BIC(mod_lin),
@@ -251,8 +254,9 @@ table1 <- as.table(table1)
 kable(table1)
 ```
 
-From the summary table above, the forward selection model is the worst. Although the square root of MSE is a bit higher for the backward elimination model compared to the full model, the adjusted R^2 is higher and AIC and BIC values are smaller. 
-Hence, the backward elimination model is considered the best one among these linear regression models. However, from the R^2 value, this model still only explains about 10.7% of the data. We then tried logistic regression model.
+From the summary table above, the forward selection model is the worst. Although the square root of MSE is a bit higher for the backward elimination model compared to the full model, the adjusted $R^2$ is higher and AIC and BIC values are smaller. 
+
+Hence, the backward elimination model is considered the best one among these linear regression models. However, from the $R^2$ value, this model still only explains about 10.7$\%$ of the data. We then tried logistic regression model.
 
 
 
@@ -290,7 +294,7 @@ From the coefficients of the variables, we can see that there're more variables 
 
 We also used Hosmer and Lemeshow goodness of fit (GOF) test again for the new logistic regression model. Since the P-value=0.8867 > 0.05, fwe ail to reject the null hypothesis that this is a good fit. This time, the p-value is larger than the first model. Again, from the Hosmer and Lemeshow GOF test, the #2 logistic model also seems to be a good fit. Look at the ROC curve and AUC, now AUC=64.7%, larger than the first model. And we know that larger the AUC, the better the model fit. Thus, after adjusting for these variables, the model seems to have a better fit. 
 
-Besides the Hosmer and Lemeshow GOF test and ROC curve, we further compared these two logistic regression models with Likelihood Ratio Test (LRT) which follows a Chi-square distribution since our two models are nested. H0: reduced model is sufficient (here, logistic #1 is sufficient) and H1: full model is preferred (here, logistic #2 is preferred). Since P-value=0.002567 < 0.05, we reject the null hypothesis that reduced model is sufficient. Therefore, logistic model #2 is preferred and we need these quadratic terms in the model. 
+Since from the table below, logistic model #1 has a smaller BIC while logistic model #2 has a smaller AIC, thus, besides the Hosmer and Lemeshow GOF test and ROC curve, we further compared these two logistic regression models with Likelihood Ratio Test (LRT) which follows a Chi-square distribution since our two models are nested. H0: reduced model is sufficient (here, logistic #1 is sufficient) and H1: full model is preferred (here, logistic #2 is preferred). Since P-value=0.002567 < 0.05, we reject the null hypothesis that reduced model is sufficient. Therefore, logistic model #2 is preferred and we need these quadratic terms in the model. 
 
 
 ```{r}
@@ -305,7 +309,15 @@ kable(table3)
 
 
 Now, we have a linear regression model and a logistic regression model, the question is for these two models, which one is better? Hence, we compared the best linear with the best logistic via AIC, BIC, and we concluded that the logistic model had a better fit since it has a smaller AIC and BIC value seeing from below table and plot, and the significant factors from the regression models are X, Y, FFMC, DMC, DC, ISI, temp, RH, wind that we can take them into further machine learning prediction. 
-
+```{r}
+tablefinal<- matrix(c(AIC(step.back), BIC(step.back),
+                  AIC(lg_burn2), BIC(lg_burn2)), ncol=2,nrow=2, byrow=TRUE)
+colnames(tablefinal)<- c("AIC", "BIC")
+rownames(tablefinal)<- c("linear #4: model with backward elimination based on AIC",
+                     "logistic model #2")
+tablefinal <- as.table(tablefinal)
+kable(tablefinal)
+```
 
 
 
