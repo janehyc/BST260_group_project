@@ -6,6 +6,8 @@
 * Data source webpage link: http://archive.ics.uci.edu/ml/datasets/Forest+Fires
 * Github repository: https://github.com/janehyc/BST260_group_project.git
 * R shiny app is in visualization folder
+* website link: https://sites.google.com/view/bst260forestfire/home
+* youtube link: https://youtu.be/CUsBywB29hQ
 
 ### Attribute Information:
 1. Spatial information
